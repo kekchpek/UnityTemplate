@@ -1,5 +1,8 @@
 {
   "dependencies": {
+    "com.cysharp.unitask": "2.5.10",
+    "com.kekchpek.umvvm": "0.19.0",
+    "com.unity.addressables": "2.2.2",
     "com.unity.collab-proxy": "2.7.1",
     "com.unity.feature.2d": "2.0.1",
     "com.unity.ide.rider": "3.0.31",
@@ -42,9 +45,7 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0",
-    "com.kekchpek.umvvm": "0.19.0",
-    "com.cysharp.unitask": "2.5.10"
+    "com.unity.modules.xr": "1.0.0"
   },
   "scopedRegistries": [
     {
