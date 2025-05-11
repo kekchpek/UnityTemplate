@@ -22,7 +22,18 @@ if [ -z "$OLD_NAME" ]; then
     exit 1
 fi
 
+rm -rfd "$OLD_NAME/Library"
+
+# Hardcoded excluded directories
+EXCLUDED_DIRS=("$NEW_NAME/Assets/DoTween" ".git")
+
 echo "Replacing '$OLD_NAME' with '$NEW_NAME'..."
+
+# Build the exclude path arguments for find
+EXCLUDE_ARGS=()
+for DIR in "${EXCLUDED_DIRS[@]}"; do
+    EXCLUDE_ARGS+=(-path "./$DIR" -prune -o)
+done
 
 # Rename files and directories
 find . -depth -name "*$OLD_NAME*" | while read -r FILE; do
@@ -31,10 +42,13 @@ find . -depth -name "*$OLD_NAME*" | while read -r FILE; do
     echo "Renamed: $FILE -> $NEW_FILE"
 done
 
-# Replace contents in all files
-grep -rl "$OLD_NAME" . | while read -r FILE; do
-    sed -i "s/$OLD_NAME/$NEW_NAME/g" "$FILE"
-    echo "Updated contents in: $FILE"
+# Replace contents in all non-excluded files
+find . "${EXCLUDE_ARGS[@]}" -type f -print | while read -r FILE; do
+    if grep -q "$OLD_NAME" "$FILE"; then
+        sed -i "s/$OLD_NAME/$NEW_NAME/g" "$FILE"
+        echo "Updated contents in: $FILE"
+    fi
 done
+
 
 echo "All replacements completed successfully."
