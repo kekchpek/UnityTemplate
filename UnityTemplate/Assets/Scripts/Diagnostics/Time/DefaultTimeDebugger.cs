@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Diagnostics;
 
 namespace Diagnostics.Time
 {
@@ -9,34 +9,29 @@ namespace Diagnostics.Time
         private struct TimeMeasurementBenchmark
         {
             private readonly string _name;
-            private readonly DateTime _startTime;
-            private DateTime? _endTime;
+            private readonly long _startTimestamp;
+            private TimeSpan _elapsedTime;
 
-            private TimeMeasurementBenchmark(string name, DateTime startTime)
+            private TimeMeasurementBenchmark(string name)
             {
                 _name = name;
-                _startTime = startTime;
-                _endTime = null;
+                _elapsedTime = TimeSpan.Zero;
+                _startTimestamp = Stopwatch.GetTimestamp();
             }
 
-            public static TimeMeasurementBenchmark Start(string name)
-            {
-                return new TimeMeasurementBenchmark(name, DateTime.UtcNow);
-            }
+            public static TimeMeasurementBenchmark Start(string name) => new TimeMeasurementBenchmark(name);
 
             public TimeSpan Complete()
             {
-                _endTime = DateTime.UtcNow;
-                return _endTime.Value - _startTime;
+                long endTimestamp = Stopwatch.GetTimestamp();
+                _elapsedTime = TimeSpan.FromTicks((endTimestamp - _startTimestamp) * TimeSpan.TicksPerSecond / Stopwatch.Frequency);
+                return _elapsedTime;
             }
 
             public void Log()
             {
-                Debug.Log(_endTime.HasValue
-                    ? $"Time benchmark for {_name}: {(_endTime.Value - _startTime).TotalSeconds:0.000}s ({_startTime} - start; {_endTime.Value} - end)"
-                    : $"Time measurement for {_name}: incompleted ({_startTime} - start)");
+                UnityEngine.Debug.Log($"Time benchmark for {_name}: {_elapsedTime.TotalSeconds:0.000}s");
             }
-
         }
 
         private static readonly Dictionary<string, TimeMeasurementBenchmark> Benchmarks = new();
@@ -45,7 +40,7 @@ namespace Diagnostics.Time
         {
             if (Benchmarks.ContainsKey(blockName))
             {
-                Debug.LogError($"Previous time measuring for block {blockName} wasn't completed, but new one started.");
+                UnityEngine.Debug.LogError($"Previous time measuring for block {blockName} wasn't completed, but new one started.");
                 return default;
             }
             Benchmarks.Add(blockName, TimeMeasurementBenchmark.Start(blockName));
@@ -63,7 +58,7 @@ namespace Diagnostics.Time
                 return time;
             }
             
-            Debug.LogError($"Time measuring block \"{blockName}\" was not started");
+            UnityEngine.Debug.LogError($"Time measuring block \"{blockName}\" was not started");
             return null;
         } 
 
