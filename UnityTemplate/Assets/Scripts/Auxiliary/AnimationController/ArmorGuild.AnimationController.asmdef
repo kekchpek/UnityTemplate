@@ -1,0 +1,21 @@
+{
+    "name": "kekchpek.AnimationController",
+    "rootNamespace": "kekchpek.Auxiliary",
+    "references": [
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:0d8beb7f090555447a6cf5ce9e54dbb4",
+        "GUID:68765d262e2128e4ab49c983f3411946",
+        "GUID:3f816d3b90c1646bea94a73fe960574e",
+        "GUID:fe8a0fb27b6064dc2b4ecf1b02c66511",
+        "GUID:72d1fea872bd7a449bf3818f2b0a6708"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

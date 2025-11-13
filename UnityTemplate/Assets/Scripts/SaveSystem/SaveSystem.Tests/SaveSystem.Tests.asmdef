@@ -1,0 +1,23 @@
+{
+    "name": "SaveSystem.Tests",
+    "rootNamespace": "SaveSystem.Tests",
+    "references": [
+        "GUID:0e7ab01b0f594741b2d20fe4c9a84bba"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "AsyncReactAwait.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
