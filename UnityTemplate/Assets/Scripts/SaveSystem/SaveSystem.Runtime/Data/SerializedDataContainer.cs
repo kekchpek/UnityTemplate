@@ -122,7 +122,6 @@ namespace SaveSystem.Data
             {
                 val.Value.Dispose();
             }
-            DictionaryPool<string, ILoadStream>.Release(_values);
         }
     }
 }

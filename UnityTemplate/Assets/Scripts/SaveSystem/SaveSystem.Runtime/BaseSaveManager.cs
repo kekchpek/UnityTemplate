@@ -238,6 +238,7 @@ namespace SaveSystem
                                 StaticBufferPool.Release(nativeList);
                             }
                         }
+                        _capturedData.Clear();
                         foreach (var (_, val) in _capturedMetaData)
                         {
                             if (val.Data is NativeList nativeList)
@@ -245,6 +246,7 @@ namespace SaveSystem
                                 StaticBufferPool.Release(nativeList);
                             }
                         }
+                        _capturedMetaData.Clear();
                         if (!TryGetStreamToRead(saveId, out s) || s.Length == 0) // Empty stream means new save - create empty data container
                         {
                             var emptyValues = DictionaryPool<string, ILoadStream>.Get();

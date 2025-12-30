@@ -291,7 +291,7 @@ namespace SaveSystem.Codec
                 throw new Exception($"Fail to read string from stream. Unexpected end of stream. " + 
                 $"Expected {bytesLenght} bytes, read {count} bytes.");
             }
-            key = new string((char*)stringBufferPtr);
+            key = new string((char*)stringBufferPtr, 0, valueLength);
             return true;
         }
     }
