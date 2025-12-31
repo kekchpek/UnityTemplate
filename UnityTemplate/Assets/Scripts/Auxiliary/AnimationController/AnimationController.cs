@@ -339,7 +339,7 @@ namespace kekchpek.Auxiliary
                             {
                                 // Adjust delay time based on speed multiplier
                                 float adjustedDuration = spineAnimation.Duration / speed;
-                                await UniTask.Delay(TimeSpan.FromSeconds(adjustedDuration));
+                                await UniTask.Delay(TimeSpan.FromSeconds(adjustedDuration), cancellationToken: this.GetCancellationTokenOnDestroy());
                             }
                         }
                         else 

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace kekchpek.Assets.Scripts.Auxiliary.AuxiliaryComponents
+namespace kekchpek.Auxiliary.AuxiliaryComponents
 {
     [RequireComponent(typeof(Image))]
     public class ImagePpuScreenScaler : MonoBehaviour

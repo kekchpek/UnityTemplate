@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using kekchpek.Auxiliary.AnimationControllerTool;
 
-namespace kekchpek.Editor.Auxiliary.AnimationControllerTool
+namespace ArmorGuild.Editor.Auxiliary.AnimationControllerTool
 {
     [CustomPropertyDrawer(typeof(AnimationData))]
     public class AnimationDataDrawer : PropertyDrawer

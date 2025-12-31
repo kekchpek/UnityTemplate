@@ -1,0 +1,20 @@
+{
+    "name": "Auxiliary.Tests",
+    "rootNamespace": "Auxiliary.Tests",
+    "references": [
+        "GUID:378b6e6b9e6c543bc9f357bcb05812ff"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
