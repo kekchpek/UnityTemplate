@@ -1,6 +1,6 @@
 {
     "name": "kekchpek.AnimationController.Editor",
-    "rootNamespace": "kekchpek.Editor.Auxiliary",
+    "rootNamespace": "kekchpek.AnimationController.Editor",
     "references": [
         "GUID:b25120b664ba63b42985ffe436957a7c"
     ],
