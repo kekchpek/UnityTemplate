@@ -1,6 +1,6 @@
-using SaveSystem.CustomSerialization;
+using kekchpek.SaveSystem.CustomSerialization;
 
-namespace SaveSystem.SaveTypes
+namespace kekchpek.SaveSystem.SaveTypes
 {
     public class SavableDictionaryCC<TKey, TValue> : BaseSavableDictionary<TKey, TValue>
     {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using kekchpek.Auxiliary.AnimationControllerTool;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -13,25 +14,11 @@ namespace kekchpek.Auxiliary
         private List<AnimationSequence> _sequences = new();
 
         private Dictionary<string, UniTaskCompletionSource> _activeSequences = new();
-        private Dictionary<string, UniTaskCompletionSource> _activeAnimations = new();
         private Func<string, string> _animationEvaluator;
+        private CancellationTokenSource _loopCancellationTokenSource;
+        private CancellationTokenSource _animationCancellationTokenSource;
 
         public bool IsPlaying => _activeSequences.Count > 0;
-
-        private void Awake()
-        {
-            // Subscribe to animation events from all event dispatchers in sequences
-            foreach (var sequence in _sequences)
-            {
-                foreach (var animation in sequence.Animations)
-                {
-                    if (animation.Type == AnimationType.Unity && animation.EventDispatcher != null)
-                    {
-                        animation.EventDispatcher.EventTriggered += OnAnimationEvent;
-                    }
-                }
-            }
-        }
 
         public void SetAnimationEvaluator(Func<string, string> animationEvaluator) {
             _animationEvaluator = animationEvaluator;
@@ -49,35 +36,6 @@ namespace kekchpek.Auxiliary
             return (null, null);
         }
 
-        private void OnDestroy()
-        {
-            // Unsubscribe from animation events
-            foreach (var sequence in _sequences)
-            {
-                foreach (var animation in sequence.Animations)
-                {
-                    if (animation.Type == AnimationType.Unity && animation.EventDispatcher != null)
-                    {
-                        animation.EventDispatcher.EventTriggered -= OnAnimationEvent;
-                    }
-                }
-            }
-        }
-
-        private void OnAnimationEvent(string eventName)
-        {
-            // Check if this event matches any active animation's complete event
-            foreach (var kvp in _activeAnimations)
-            {
-                if (kvp.Key == eventName)
-                {
-                    kvp.Value.TrySetResult();
-                    _activeAnimations.Remove(kvp.Key);
-                    break;
-                }
-            }
-        }
-
         public async UniTask AwaitAnimationCompletion() 
         {
             await UniTask.WaitUntil(() => !IsPlaying);
@@ -89,7 +47,7 @@ namespace kekchpek.Auxiliary
         /// <param name="sequenceNames">The names of the sequences to play concurrently.</param>
         /// <param name="isInstantTransition">If true, the state will be changed to the animation end immediately.</param>
         /// <returns>A UniTask that completes when all sequences have finished playing.</returns>
-        public async UniTask PlaySequencesConcurrently(string[] sequenceNames, bool isInstantTransition = false)
+        public async UniTask PlaySequencesConcurrently(IEnumerable<string> sequenceNames, bool isInstantTransition = false)
         {
             var tasks = new List<UniTask>();
             
@@ -186,6 +144,7 @@ namespace kekchpek.Auxiliary
         /// <returns>A UniTask that completes when the sequence has finished playing.</returns>
         public async UniTask PlaySequence(string sequenceName, bool isInstantTransition = false, bool allowConcurrent = false)
         {
+            CancelLoopedSequence();
             await PlaySequenceWithSpeed(sequenceName, 1.0f, isInstantTransition, allowConcurrent);
         }
 
@@ -199,7 +158,53 @@ namespace kekchpek.Auxiliary
         /// <returns>A UniTask that completes when the sequence has finished playing.</returns>
         public async UniTask PlaySequence(string sequenceName, float speed, bool isInstantTransition = false, bool allowConcurrent = false)
         {
+            CancelLoopedSequence();
             await PlaySequenceWithSpeed(sequenceName, speed, isInstantTransition, allowConcurrent);
+        }
+
+        /// <summary>
+        /// Plays the sequence with the given name in a loop until PlaySequence is called.
+        /// </summary>
+        /// <param name="sequenceName">The name of the sequence to play in loop.</param>
+        /// <param name="speed">Speed multiplier for the sequence.</param>
+        public void PlaySequenceLooped(string sequenceName, float speed = 1.0f)
+        {
+            CancelLoopedSequence();
+            _loopCancellationTokenSource = new CancellationTokenSource();
+            PlaySequenceLoopedInternal(sequenceName, speed, _loopCancellationTokenSource.Token).Forget();
+        }
+
+        private void CancelLoopedSequence()
+        {
+            if (_loopCancellationTokenSource != null)
+            {
+                _loopCancellationTokenSource.Cancel();
+                _loopCancellationTokenSource.Dispose();
+                _loopCancellationTokenSource = null;
+            }
+        }
+
+        /// <summary>
+        /// Interrupts all currently playing animations.
+        /// </summary>
+        public void InterruptCurrentAnimation()
+        {
+            CancelLoopedSequence();
+            _activeSequences.Clear();
+            if (_animationCancellationTokenSource != null)
+            {
+                _animationCancellationTokenSource.Cancel();
+                _animationCancellationTokenSource.Dispose();
+                _animationCancellationTokenSource = null;
+            }
+        }
+
+        private async UniTaskVoid PlaySequenceLoopedInternal(string sequenceName, float speed, CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await PlaySequenceWithSpeed(sequenceName, speed, false, true);
+            }
         }
 
         /// <summary>
@@ -210,7 +215,7 @@ namespace kekchpek.Auxiliary
             // If not allowing concurrent and other sequences are playing, wait for them to complete
             if (!allowConcurrent && _activeSequences.Count > 0)
             {
-                Debug.Log($"AnimationController: Waiting for other sequences to complete before playing '{sequenceName}'");
+                Debug.LogError($"AnimationController: Squence {sequenceName} will not be played due to other sequences are playing.");
                 return;
             }
 
@@ -220,6 +225,10 @@ namespace kekchpek.Auxiliary
                 Debug.LogError($"AnimationController: Sequence '{sequenceName}' not found");
                 return;
             }
+
+            _animationCancellationTokenSource?.Dispose();
+            _animationCancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = _animationCancellationTokenSource.Token;
 
             var completionSource = new UniTaskCompletionSource();
             _activeSequences[sequenceName] = completionSource;
@@ -231,13 +240,15 @@ namespace kekchpek.Auxiliary
                 
                 for (int i = 0; i < sequence.Animations.Count; i++)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     var animation = sequence.Animations[i];
                     
                     // If this animation should run in parallel
                     if (animation.ExecuteInParallel)
                     {
                         // Start it immediately without waiting
-                        activeParallelTasks.Add(PlayAnimation(animation, speed, isInstantTransition));
+                        activeParallelTasks.Add(PlayAnimation(animation, speed, isInstantTransition, cancellationToken));
                     }
                     else
                     {
@@ -249,7 +260,7 @@ namespace kekchpek.Auxiliary
                         }
                         
                         // Then play this animation
-                        await PlayAnimation(animation, speed, isInstantTransition);
+                        await PlayAnimation(animation, speed, isInstantTransition, cancellationToken);
                     }
                 }
                 
@@ -259,7 +270,12 @@ namespace kekchpek.Auxiliary
                     await UniTask.WhenAll(activeParallelTasks);
                 }
 
+                _activeSequences.Remove(sequenceName);
                 completionSource.TrySetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                // Animation was interrupted, this is expected
             }
             catch (Exception e)
             {
@@ -271,7 +287,7 @@ namespace kekchpek.Auxiliary
             }
         }
 
-        private async UniTask PlayAnimation(AnimationData animation, float speed = 1.0f, bool isInstantTransition = false)
+        private async UniTask PlayAnimation(AnimationData animation, float speed, bool isInstantTransition, CancellationToken cancellationToken)
         {
             switch (animation.Type)
             {
@@ -285,33 +301,29 @@ namespace kekchpek.Auxiliary
                         
                         try
                         {
-                            if (isInstantTransition) {
+                            if (isInstantTransition)
+                            {
                                 animation.UnityAnimator.Play(animationName, -1, 1f);
                                 animation.UnityAnimator.Update(0f);
                             }
-                            else {
-                                animation.UnityAnimator.Play(animationName, -1, 0f);
-                            }
-
-                            // If we have an event dispatcher and complete event, use that for completion
-                            if (animation.EventDispatcher != null && !string.IsNullOrEmpty(animation.CompleteAnimationEvent))
-                            {
-                                var animationCompletionSource = new UniTaskCompletionSource();
-                                _activeAnimations[animation.CompleteAnimationEvent] = animationCompletionSource;
-                                if (isInstantTransition) {
-                                    animationCompletionSource.TrySetResult();
-                                }
-                                await animationCompletionSource.Task;
-                            }
                             else
                             {
-                                Debug.LogError("Can't determine animation completion. Check if animation configured properly.");
+                                animation.UnityAnimator.Play(animationName, -1, 0f);
+                                animation.UnityAnimator.Update(0f);
+                            }
+                            if (!isInstantTransition)
+                            {
+                                var stateInfo = animation.UnityAnimator.GetCurrentAnimatorStateInfo(0);
+                                await UniTask.Delay(TimeSpan.FromSeconds(stateInfo.length / speed), cancellationToken: cancellationToken);
                             }
                         }
                         finally
                         {
                             // Restore original speed
-                            animation.UnityAnimator.speed = originalSpeed;
+                            if (animation.UnityAnimator) // could be destroyed
+                            {
+                                animation.UnityAnimator.speed = originalSpeed;
+                            }
                         }
                     }
                     break;
@@ -327,19 +339,22 @@ namespace kekchpek.Auxiliary
                         if (spineAnimation != null)
                         {
                             // Store original time scale and apply new speed
-                            float originalTimeScale = activeSkeleton.animationState.TimeScale;
                             activeSkeleton.animationState.TimeScale = speed;
                             
                             activeSkeleton.animationState.SetAnimation(animation.SpineAnimationLayer, spineAnimationName, false);
+                            
                             if (isInstantTransition)
                             {
                                 activeSkeleton.animationState.Update(spineAnimation.Duration);
                             }
-                            else 
+                            else
                             {
                                 // Adjust delay time based on speed multiplier
                                 float adjustedDuration = spineAnimation.Duration / speed;
-                                await UniTask.Delay(TimeSpan.FromSeconds(adjustedDuration), cancellationToken: this.GetCancellationTokenOnDestroy());
+                                if (adjustedDuration > 0f)
+                                {
+                                    await UniTask.Delay(TimeSpan.FromSeconds(adjustedDuration), cancellationToken: cancellationToken);
+                                }
                             }
                         }
                         else 
@@ -366,6 +381,11 @@ namespace kekchpek.Auxiliary
                     }
                     break;
             }
+        }
+
+        private void OnDestroy()
+        {
+            InterruptCurrentAnimation();
         }
     }
 }

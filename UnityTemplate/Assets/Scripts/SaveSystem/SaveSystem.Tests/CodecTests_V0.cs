@@ -1,13 +1,13 @@
 using NUnit.Framework;
-using SaveSystem.Codec;
+using kekchpek.SaveSystem.Codec;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System;
-using SaveSystem.CustomSerialization;
-using SaveSystem.Data;
+using kekchpek.SaveSystem.CustomSerialization;
+using kekchpek.SaveSystem.Data;
 
-namespace SaveSystem.Tests
+namespace kekchpek.SaveSystem.Tests
 {
 
     [TestFixture]
@@ -34,7 +34,7 @@ namespace SaveSystem.Tests
             {
                 Data = new List<string> { "test" },
                 DataNames = new List<string> { "testKey" },
-                CustomCodec = codecProvider.GetCustomCodec<string>()
+                CustomCodecProvider = codecProvider.GetCustomCodec<string>
             };
             var buffer = new byte[1024];
             var stream = new MemoryStream(buffer);

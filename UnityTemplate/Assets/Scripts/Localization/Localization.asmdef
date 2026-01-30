@@ -1,0 +1,20 @@
+{
+    "name": "Localization",
+    "rootNamespace": "kekchpek.Localization",
+    "references": [
+        "GUID:3f816d3b90c1646bea94a73fe960574e",
+        "GUID:0d8beb7f090555447a6cf5ce9e54dbb4",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:fe8a0fb27b6064dc2b4ecf1b02c66511"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

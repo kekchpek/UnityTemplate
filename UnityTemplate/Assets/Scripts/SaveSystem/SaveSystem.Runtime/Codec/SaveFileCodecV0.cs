@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Collections;
-using SaveSystem.CustomSerialization;
-using SaveSystem.Utils;
+using kekchpek.SaveSystem.CustomSerialization;
+using kekchpek.SaveSystem.Utils;
 using UnityEngine;
-using SaveSystem.Data;
+using kekchpek.SaveSystem.Data;
 
-namespace SaveSystem.Codec
+namespace kekchpek.SaveSystem.Codec
 {
     internal class SaveFileCodecV0 : ISaveFileCodec, ISaveCodecAdapter, ILoadCodecAdapter
     {
@@ -123,7 +123,8 @@ namespace SaveSystem.Codec
         {
             foreach (var saveData in data)
             {
-                if (saveData.CustomCodec == null) {
+                var customCodec = saveData.CustomCodecProvider?.Invoke();
+                if (customCodec == null) {
                     var value = saveData.Data;
                     switch (value)
                     {
@@ -169,7 +170,7 @@ namespace SaveSystem.Codec
                         foreach (var o in enumerable)
                         {   
                             WriteString(outputStream, saveData.DataNames[i++]);
-                            WriteCustom(outputStream, o, saveData.CustomCodec);
+                            WriteCustom(outputStream, o, customCodec);
                         }
                     }
                     else 

@@ -1,6 +1,6 @@
 using System;
 
-namespace SaveSystem.CustomSerialization
+namespace kekchpek.SaveSystem.CustomSerialization
 {
     public interface ISaveObject
     {

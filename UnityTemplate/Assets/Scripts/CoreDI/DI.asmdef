@@ -1,0 +1,25 @@
+{
+    "name": "DI",
+    "rootNamespace": "DI.Core",
+    "references": [
+        "Zenject",
+        "AssetsSystem",
+        "Startup",
+        "Diagnostics",
+        "GameSaves",
+        "kekchpek.Auxiliary",
+        "GameMasterConsole",
+        "Achievements",
+        "Localization",
+        "Startup.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

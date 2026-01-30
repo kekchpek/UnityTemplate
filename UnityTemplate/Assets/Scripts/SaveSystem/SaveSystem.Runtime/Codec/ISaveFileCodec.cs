@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using SaveSystem.CustomSerialization;
-using SaveSystem.Data;
+using kekchpek.SaveSystem.CustomSerialization;
+using kekchpek.SaveSystem.Data;
 
-namespace SaveSystem.Codec
+namespace kekchpek.SaveSystem.Codec
 {
     internal interface ISaveFileCodec
     {

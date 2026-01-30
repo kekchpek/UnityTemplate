@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace SaveSystem.CustomSerialization
+namespace kekchpek.SaveSystem.CustomSerialization
 {
     public interface ISaveStream : IDisposable
     {

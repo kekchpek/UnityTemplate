@@ -5,16 +5,20 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncReactAwait.Bindable;
-using SaveSystem.Codec;
-using SaveSystem.CustomSerialization;
-using SaveSystem.Data;
-using SaveSystem.Utils;
+using kekchpek.SaveSystem.Codec;
+using kekchpek.SaveSystem.CustomSerialization;
+using kekchpek.SaveSystem.Data;
+using kekchpek.SaveSystem.Utils;
 using UnityEngine.Pool;
 using Debug = UnityEngine.Debug;
 
-namespace SaveSystem
+namespace kekchpek.SaveSystem
 {
-    public abstract class BaseSaveManager : ISaveManager, ICustomCodecsProvider, ICustomCodecsRegister
+    public abstract class BaseSaveManager : 
+        ISaveManager, 
+        ICustomCodecsProvider, 
+        ICustomCodecsRegister, 
+        ISaveDataProvider
     {
 
 
@@ -97,7 +101,11 @@ namespace SaveSystem
 
         public void RegisterCustomCodec<T>(ICustomCodec<T> codec)
         {
-            _customCodecs.Add(typeof(T), codec);
+            var type = typeof(T);
+            if (_customCodecs.ContainsKey(type)) {
+                return;
+            }
+            _customCodecs.Add(type, codec);
         }
 
         public void RemoveCustomCodec<T>() 
@@ -105,7 +113,7 @@ namespace SaveSystem
             _customCodecs.Remove(typeof(T));
         }
 
-        public async Task SaveExplicitly()
+        public void SaveExplicitly()
         {
             if (_debounceSaveCts != null)
             {
@@ -114,72 +122,56 @@ namespace SaveSystem
                 _debounceSaveCts.Dispose();
                 _debounceSaveCts = null;
             }
-            await SaveInternal().ConfigureAwait(false);
+            SaveInternal();
         }
 
-        private async Task SaveInternal()
+        private void SaveInternal()
         {
-            // ReSharper disable once InconsistentlySynchronizedField
             if (_saving)
             {
                 return;
-            }
-            lock (_stateLock)
-            {
-                if (_saving)
-                {
-                    return;
-                }
             }
             
             if (CurrentSaveId == null)
             {
                 Debug.LogError("Attempt to save while no save id set.");
             }
-
-            await Task.Run(() =>
+            if (_loading)
             {
-                lock (_stateLock)
-                {
-                    if (_loading)
-                    {
-                        Debug.LogError("Attempt to save while loading.");
-                        return;
-                    }
-                    if (_saving)
-                    {
-                        Debug.LogError("Attempt to save while saving.");
-                        return;
-                    }
+                Debug.LogError("Attempt to save while loading.");
+                return;
+            }
+            if (_saving)
+            {
+                Debug.LogError("Attempt to save while saving.");
+                return;
+            }
 
-                    Stream stream = null;
-                    try
-                    {
-                        _saving = true;
-                        stream = GetStreamToWrite(CurrentSaveId);
-                        var codec = _codecs[^1];
-                        WriteVersion(stream, _codecs.Count - 1);
-                        codec.Encode(stream, 
-                            _capturedMetaData.Values, _loadedMetaDataContainer,
-                            _capturedData.Values, _loadedDataContainer);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"Error saving save {CurrentSaveId}: {e.Message}");
-                        Debug.LogException(e);
-                    }
-                    finally
-                    {
-                        if (stream != null)
-                        {
-                            ReleaseStream(stream);
-                        }
-                        _saving = false;
-                        _lastSaveTime = Stopwatch.GetTimestamp();
-                    }
+            Stream stream = null;
+            try
+            {
+                _saving = true;
+                stream = GetStreamToWrite(CurrentSaveId);
+                var codec = _codecs[^1];
+                WriteVersion(stream, _codecs.Count - 1);
+                codec.Encode(stream, 
+                    _capturedMetaData.Values, _loadedMetaDataContainer,
+                    _capturedData.Values, _loadedDataContainer);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error saving save {CurrentSaveId}: {e.Message}");
+                Debug.LogException(e);
+            }
+            finally
+            {
+                if (stream != null)
+                {
+                    ReleaseStream(stream);
                 }
-                
-            }).ConfigureAwait(false);
+                _saving = false;
+                _lastSaveTime = Stopwatch.GetTimestamp();
+            }
         }
 
         protected abstract Stream GetStreamToWrite(string saveId);
@@ -211,96 +203,90 @@ namespace SaveSystem
             await Task.Run(SaveInternal).ConfigureAwait(false);
         }
 
-        public async Task LoadOrCreate(string saveId)
+        public void LoadOrCreate(string saveId)
         {
-            await Task.Run(() =>
+            if (_loading)
             {
-                lock (_stateLock)
+                Debug.LogError("Attempt to load while loading other save.");
+                return;
+            }
+
+            Stream s = null;
+            try
+            {
+                CurrentSaveId = saveId;
+                _loading = true;
+                _loadedDataContainer?.Dispose();
+                _loadedMetaDataContainer?.Dispose();
+                _lastSaveTime = Stopwatch.GetTimestamp();
+                foreach (var (_, val) in _capturedData)
                 {
-                    if (_loading)
+                    if (val.Data is NativeList nativeList)
                     {
-                        Debug.LogError("Attempt to load while loading other save.");
-                        return;
-                    }
-
-                    Stream s = null;
-                    try
-                    {
-                        CurrentSaveId = saveId;
-                        _loading = true;
-                        _loadedDataContainer?.Dispose();
-                        _loadedMetaDataContainer?.Dispose();
-                        _lastSaveTime = Stopwatch.GetTimestamp();
-                        foreach (var (_, val) in _capturedData)
-                        {
-                            if (val.Data is NativeList nativeList)
-                            {
-                                StaticBufferPool.Release(nativeList);
-                            }
-                        }
-                        _capturedData.Clear();
-                        foreach (var (_, val) in _capturedMetaData)
-                        {
-                            if (val.Data is NativeList nativeList)
-                            {
-                                StaticBufferPool.Release(nativeList);
-                            }
-                        }
-                        _capturedMetaData.Clear();
-                        if (!TryGetStreamToRead(saveId, out s) || s.Length == 0) // Empty stream means new save - create empty data container
-                        {
-                            var emptyValues = DictionaryPool<string, ILoadStream>.Get();
-                            _loadedDataContainer = new SerializedDataContainer(emptyValues, this);
-                            _loadedMetaDataContainer = new SerializedDataContainer(emptyValues, this);
-                            return;
-                        }
-                        
-                        var codec = GetCodec(s);
-                        if (codec == null)
-                            return;
-                        
-                        var values = DictionaryPool<string, ILoadStream>.Get();
-                        var metaValues = DictionaryPool<string, ILoadStream>.Get();
-                        foreach (var (key, val, isMeta) in codec.Decode(s))
-                        {
-                            if (isMeta)
-                            {
-                                if (metaValues.ContainsKey(key))
-                                {
-                                    Debug.LogWarning($"Duplicate key found in save file (meta): {key}. Skipping duplicate entry.");
-                                    continue;
-                                }
-                                metaValues.Add(key, val);
-                            }
-                            else
-                            {
-                                if (values.ContainsKey(key))
-                                {
-                                    Debug.LogWarning($"Duplicate key found in save file: {key}. Skipping duplicate entry.");
-                                    continue;
-                                }
-                                values.Add(key, val);
-                            }
-                        }
-
-                        _loadedDataContainer = new SerializedDataContainer(values, this);
-                        _loadedMetaDataContainer = new SerializedDataContainer(metaValues, this);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"Error loading save {saveId}: {e.Message}");
-                        Debug.LogException(e);
-                    }
-                    finally
-                    {
-                        if (s != null)
-                        {
-                            ReleaseStream(s);
-                        }
-                        _loading = false;
+                        StaticBufferPool.Release(nativeList);
                     }
                 }
-            }).ConfigureAwait(false);
+                _capturedData.Clear();
+                foreach (var (_, val) in _capturedMetaData)
+                {
+                    if (val.Data is NativeList nativeList)
+                    {
+                        StaticBufferPool.Release(nativeList);
+                    }
+                }
+                _capturedMetaData.Clear();
+                if (!TryGetStreamToRead(saveId, out s) || s.Length == 0) // Empty stream means new save - create empty data container
+                {
+                    var emptyValues = DictionaryPool<string, ILoadStream>.Get();
+                    _loadedDataContainer = new SerializedDataContainer(emptyValues, this);
+                    _loadedMetaDataContainer = new SerializedDataContainer(emptyValues, this);
+                    return;
+                }
+                
+                var codec = GetCodec(s);
+                if (codec == null)
+                    return;
+                
+                var values = DictionaryPool<string, ILoadStream>.Get();
+                var metaValues = DictionaryPool<string, ILoadStream>.Get();
+                foreach (var (key, val, isMeta) in codec.Decode(s))
+                {
+                    if (isMeta)
+                    {
+                        if (metaValues.ContainsKey(key))
+                        {
+                            Debug.LogWarning($"Duplicate key found in save file (meta): {key}. Skipping duplicate entry.");
+                            continue;
+                        }
+                        metaValues.Add(key, val);
+                    }
+                    else
+                    {
+                        if (values.ContainsKey(key))
+                        {
+                            Debug.LogWarning($"Duplicate key found in save file: {key}. Skipping duplicate entry.");
+                            continue;
+                        }
+                        values.Add(key, val);
+                    }
+                }
+
+                _loadedDataContainer = new SerializedDataContainer(values, this);
+                _loadedMetaDataContainer = new SerializedDataContainer(metaValues, this);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error loading save {saveId}: {e.Message}");
+                Debug.LogException(e);
+            }
+            finally
+            {
+                if (s != null)
+                {
+                    ReleaseStream(s);
+                }
+                _loading = false;
+            }
         }
 
         protected abstract void ReleaseStream(Stream s);
@@ -400,6 +386,17 @@ namespace SaveSystem
             return newVal;
         }
 
+        private ICustomCodec ValidataAndGetCustomCodec<T>()
+        {
+            var codec = GetCustomCodec<T>();
+            if (codec == null)
+            {
+                Debug.LogError($"Custom codec for type {typeof(T)} is not registered. Returning null.");
+                return null;
+            }
+            return codec;
+        }
+
         private IMutable<T> CreateMutableCustomValue<T>(string name, T val = default, bool isMeta = false)
         {
             var capturedDataDict = isMeta ? _capturedMetaData : _capturedData;
@@ -407,7 +404,7 @@ namespace SaveSystem
             {
                 Data = new List<T>(),
                 DataNames = new List<string>(),
-                CustomCodec = _customCodecs[typeof(T)],
+                CustomCodecProvider = ValidataAndGetCustomCodec<T>,
             });
             
             if (capturedData.DataNames.Contains(name))

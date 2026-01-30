@@ -20,11 +20,6 @@ namespace kekchpek.Auxiliary.AnimationControllerTool
         public string AnimationStateName;
         
         [HideInInspector]
-        public AnimationEventDispatcher EventDispatcher;
-        [HideInInspector]
-        public string CompleteAnimationEvent;
-        
-        [HideInInspector]
         public SkeletonGraphic SpineSkeleton;
         [HideInInspector]
         public SkeletonAnimation SpineSkeletonAnimation;
@@ -49,8 +44,6 @@ namespace kekchpek.Auxiliary.AnimationControllerTool
             {
                 UnityAnimator = null;
                 AnimationStateName = string.Empty;
-                EventDispatcher = null;
-                CompleteAnimationEvent = string.Empty;
             }
 
             // Clear Spine fields if not Spine type

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using SaveSystem.Codec;
-using SaveSystem.CustomSerialization;
-using SaveSystem.Utils;
+using kekchpek.SaveSystem.Codec;
+using kekchpek.SaveSystem.CustomSerialization;
+using kekchpek.SaveSystem.Utils;
 using UnityEngine;
 using UnityEngine.Pool;
 
-namespace SaveSystem.Data
+namespace kekchpek.SaveSystem.Data
 {
     public class SerializedDataContainer : IDataContainer
     {
@@ -75,6 +75,11 @@ namespace SaveSystem.Data
         public T DeserializeCustomValue<T>(string valueKey, bool removeAfterDeserialization, Func<T> defaultValueFactory = null)
         {
             var customCodec = _customCodecsProvider.GetCustomCodec<T>();
+            if (customCodec == null)
+            {
+                Debug.LogError($"Custom codec for type {typeof(T)} is not registered. Returning default.");
+                return defaultValueFactory == null ? default : defaultValueFactory();
+            }
             if (_values.TryGetValue(valueKey, out var value))
             {
                 if (value == null)

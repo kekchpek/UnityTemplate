@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace SaveSystem.Utils
+namespace kekchpek.SaveSystem.Utils
 {
     internal unsafe class NativeList
     {

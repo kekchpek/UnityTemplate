@@ -1,8 +1,8 @@
 using System;
 using NUnit.Framework;
-using SaveSystem.Utils;
+using kekchpek.SaveSystem.Utils;
 
-namespace SaveSystem.Tests
+namespace kekchpek.SaveSystem.Tests
 {
 
     [TestFixture]

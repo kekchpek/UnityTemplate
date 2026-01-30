@@ -1,7 +1,7 @@
 
-using SaveSystem.CustomSerialization;
+using kekchpek.SaveSystem.CustomSerialization;
 
-namespace SaveSystem.SaveTypes
+namespace kekchpek.SaveSystem.SaveTypes
 {
     public class CustomSavableList<T> : BaseSavableList<T>
     {

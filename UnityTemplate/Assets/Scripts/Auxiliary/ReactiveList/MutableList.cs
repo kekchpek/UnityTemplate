@@ -29,7 +29,7 @@ namespace kekchpek.Auxiliary.ReactiveList
         public void Add(T item)
         {
             _list.Add(item);
-            _lastAdded.Value = item;
+            _lastAdded.ForceSet(item);
         }
 
         public void Clear()
@@ -50,7 +50,7 @@ namespace kekchpek.Auxiliary.ReactiveList
         {
             if (!_list.Remove(item))
                 return false;
-            _lastRemoved.Value = item;
+            _lastRemoved.ForceSet(item);
             return true;
         }
 
@@ -62,14 +62,14 @@ namespace kekchpek.Auxiliary.ReactiveList
         public void Insert(int index, T item)
         {
             _list.Insert(index, item);
-            _lastAdded.Value = item;
+            _lastAdded.ForceSet(item);
         }
 
         public void RemoveAt(int index)
         {
             var outcome = _list[index];
             _list.RemoveAt(index);
-            _lastRemoved.Value = outcome;
+            _lastRemoved.ForceSet(outcome);
         }
 
         public T this[int index]

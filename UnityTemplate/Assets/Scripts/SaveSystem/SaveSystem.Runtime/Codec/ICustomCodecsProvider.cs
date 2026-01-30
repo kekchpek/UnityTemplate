@@ -1,6 +1,6 @@
 using System;
 
-namespace SaveSystem.Codec
+namespace kekchpek.SaveSystem.Codec
 {
     public interface ICustomCodecsProvider
     {

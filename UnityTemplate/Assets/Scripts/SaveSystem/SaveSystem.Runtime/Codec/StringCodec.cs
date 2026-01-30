@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using SaveSystem.CustomSerialization;
+using kekchpek.SaveSystem.CustomSerialization;
 
-namespace SaveSystem.Codec
+namespace kekchpek.SaveSystem.Codec
 {
     public class StringCodec : ICustomCodec<string>
     {

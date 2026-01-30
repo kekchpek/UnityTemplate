@@ -4,9 +4,9 @@ using System.Collections;
 using UnityEngine.TestTools;
 using NUnit.Framework;
 using UnityEngine;
-using SaveSystem.CustomSerialization;
+using kekchpek.SaveSystem.CustomSerialization;
 
-namespace SaveSystem.Tests
+namespace kekchpek.SaveSystem.Tests
 {
     public class SaveManagerTests
     {
@@ -89,7 +89,7 @@ namespace SaveSystem.Tests
 
         // Helper that performs the full save → load cycle and lets callers provide
         // actions for the save-phase and the load-phase respectively.
-        private static IEnumerator SaveThenLoad(Action<StreamSaveManager> savePhase, Action<StreamSaveManager> loadPhase)
+        private static void SaveThenLoad(Action<StreamSaveManager> savePhase, Action<StreamSaveManager> loadPhase)
         {
             // Prepare in-memory stream acting as our persistent storage.
             var stream = new MemoryStream();
@@ -98,35 +98,24 @@ namespace SaveSystem.Tests
             // SAVE PHASE
             // -----------------
             var saveManager = new StreamSaveManager(stream);
-            var saveInitTask = saveManager.LoadOrCreate("TestSave");
-            while (!saveInitTask.IsCompleted)
-            {
-                yield return null;
-            }
+            saveManager.LoadOrCreate("TestSave");
+
             savePhase(saveManager);
-            var saveTask = saveManager.SaveExplicitly();
-            while (!saveTask.IsCompleted)
-            {
-                yield return null;
-            }
+            saveManager.SaveExplicitly();
 
             // -----------------
             // LOAD PHASE
             // -----------------
             var streamCopy = new MemoryStream(stream.ToArray());
             var loadManager = new StreamSaveManager(streamCopy);
-            var loadTask = loadManager.LoadOrCreate("TestSave");
-            while (!loadTask.IsCompleted)
-            {
-                yield return null;
-            }
+            loadManager.LoadOrCreate("TestSave");
             loadPhase(loadManager);
         }
 
-        [UnityTest]
-        public IEnumerator TestSingleInt([Values(1, 0, -1, int.MaxValue, int.MinValue)] int expectedValue)
+        [Test]
+        public void TestSingleInt([Values(1, 0, -1, int.MaxValue, int.MinValue)] int expectedValue)
         {
-            yield return SaveThenLoad(
+            SaveThenLoad(
                 saveManager => saveManager.DeserializeAndCaptureStructValue("TestInterger", expectedValue),
                 loadManager =>
                 {
@@ -136,10 +125,10 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSingleIntChange([Values(1, 0, -1, int.MaxValue, int.MinValue)] int expectedValue)
+        [Test]
+        public void TestSingleIntChange([Values(1, 0, -1, int.MaxValue, int.MinValue)] int expectedValue)
         {
-            yield return SaveThenLoad(
+            SaveThenLoad(
                 saveManager =>
                 {
                     var value = saveManager.DeserializeAndCaptureStructValue("TestInterger", 0);
@@ -153,10 +142,10 @@ namespace SaveSystem.Tests
             );
         }
         
-        [UnityTest]
-        public IEnumerator TestMultipleStructValues()
+        [Test]
+        public void TestMultipleStructValues()
         {
-            yield return SaveThenLoad(
+            SaveThenLoad(
                 saveManager =>
                 {
                     // Capture and modify several different struct values
@@ -191,10 +180,10 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSingleSavableObject()
+        [Test]
+        public void TestSingleSavableObject()
         {
-            yield return SaveThenLoad(
+            SaveThenLoad(
                 saveManager => 
                 {
                     var value = saveManager.DeserializeAndCaptureSavableObject<TestSavableObject>("TestSavableObject", () => new TestSavableObject());
@@ -212,10 +201,10 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSavableObjectsAndStructs()
+        [Test]
+        public void TestSavableObjectsAndStructs()
         {
-            yield return SaveThenLoad(
+            SaveThenLoad(
                 saveManager => {
                     var floatVal = saveManager.DeserializeAndCaptureStructValue("Float1", 0f);
                     floatVal.Value = 123.456f;
@@ -266,10 +255,10 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSavableObjectWithNullValue()
+        [Test]
+        public void TestSavableObjectWithNullValue()
         {
-            yield return SaveThenLoad(
+            SaveThenLoad(
                 saveManager =>
                 {
                     var value = saveManager.DeserializeAndCaptureSavableObject("TestSavableObject", () => new TestSavableObject());
@@ -283,10 +272,10 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSavableObjectWithSavableValue()
+        [Test]
+        public void TestSavableObjectWithSavableValue()
         {
-            yield return SaveThenLoad(
+            SaveThenLoad(
                 saveManager =>
                 {
                     var value = saveManager.DeserializeAndCaptureSavableObject("TestSavableObject", () => new TestSavableObject());
@@ -303,9 +292,9 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSaveStringWithoutChanging() {
-            yield return SaveThenLoad(
+        [Test]
+        public void TestSaveStringWithoutChanging() {
+            SaveThenLoad(
                 saveManager =>
                 {
                     var value = saveManager.DeserializeAndCaptureCustomValue<string>("String1", () => "Hello");
@@ -318,9 +307,9 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSaveString() {
-            yield return SaveThenLoad(
+        [Test]
+        public void TestSaveString() {
+            SaveThenLoad(
                 saveManager =>
                 {
                     var value = saveManager.DeserializeAndCaptureCustomValue<string>("String1", () => "Hello");
@@ -334,9 +323,9 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSaveStringWithNullValue() {
-            yield return SaveThenLoad(
+        [Test]
+        public void TestSaveStringWithNullValue() {
+            SaveThenLoad(
                 saveManager =>
                 {
                     var value = saveManager.DeserializeAndCaptureCustomValue<string>("String1", () => "Hello");
@@ -351,9 +340,9 @@ namespace SaveSystem.Tests
         }
 
 
-        [UnityTest]
-        public IEnumerator TestSaveEmptyString() {
-            yield return SaveThenLoad(
+        [Test]
+        public void TestSaveEmptyString() {
+            SaveThenLoad(
                 saveManager =>
                 {
                     var value = saveManager.DeserializeAndCaptureCustomValue<string>("String1", () => "Hello");
@@ -367,9 +356,9 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSavableObjectWithEmptyString() {
-            yield return SaveThenLoad(
+        [Test]
+        public void TestSavableObjectWithEmptyString() {
+            SaveThenLoad(
                 saveManager =>
                 {
                     var value = saveManager.DeserializeAndCaptureSavableObject<TestSavableObject>("TestSavableObject", () => new TestSavableObject());
@@ -383,9 +372,9 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSavableObjectWithNullString() {
-            yield return SaveThenLoad(
+        [Test]
+        public void TestSavableObjectWithNullString() {
+            SaveThenLoad(
                 saveManager =>
                 {
                     var value = saveManager.DeserializeAndCaptureSavableObject<TestSavableObject>("TestSavableObject", () => new TestSavableObject());
@@ -399,9 +388,9 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSavableObjectWithString() {
-            yield return SaveThenLoad(
+        [Test]
+        public void TestSavableObjectWithString() {
+            SaveThenLoad(
                 saveManager =>
                 {
                     var value = saveManager.DeserializeAndCaptureSavableObject<TestSavableObject>("TestSavableObject", () => new TestSavableObject());
@@ -415,9 +404,9 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestProblemCase1() {
-            yield return SaveThenLoad(
+        [Test]
+        public void TestProblemCase1() {
+            SaveThenLoad(
                 saveManager =>
                 {
                     var value = saveManager.DeserializeAndCaptureCustomValue<string>("SelectedProfile", null);
@@ -431,8 +420,8 @@ namespace SaveSystem.Tests
             );
         }
 
-        [UnityTest]
-        public IEnumerator TestSaveLoadSaveWithoutCapturingStructValue()
+        [Test]
+        public void TestSaveLoadSaveWithoutCapturingStructValue()
         {
             // Test for non-meta data: save struct value, load it, then save again without capturing
             var stream = new MemoryStream();
@@ -441,31 +430,19 @@ namespace SaveSystem.Tests
             // SAVE PHASE 1
             // -----------------
             var saveManager1 = new StreamSaveManager(stream);
-            var saveInitTask1 = saveManager1.LoadOrCreate("TestSave");
-            while (!saveInitTask1.IsCompleted)
-            {
-                yield return null;
-            }
+            saveManager1.LoadOrCreate("TestSave");
             
             var intValue = saveManager1.DeserializeAndCaptureStructValue("TestInt", 0);
             intValue.Value = 42;
             
-            var saveTask1 = saveManager1.SaveExplicitly();
-            while (!saveTask1.IsCompleted)
-            {
-                yield return null;
-            }
+            saveManager1.SaveExplicitly();
 
             // -----------------
             // LOAD PHASE
             // -----------------
             var streamCopy1 = new MemoryStream(stream.ToArray());
             var loadManager = new StreamSaveManager(streamCopy1);
-            var loadTask = loadManager.LoadOrCreate("TestSave");
-            while (!loadTask.IsCompleted)
-            {
-                yield return null;
-            }
+            loadManager.LoadOrCreate("TestSave");
 
             // Resets position here because StreamSaveManager uses the same stream for both save and load
             streamCopy1.Position = 0;
@@ -473,29 +450,21 @@ namespace SaveSystem.Tests
             // -----------------
             // SAVE PHASE 2 (without capturing new values)
             // -----------------
-            var saveTask2 = loadManager.SaveExplicitly();
-            while (!saveTask2.IsCompleted)
-            {
-                yield return null;
-            }
+            loadManager.SaveExplicitly();
 
             // -----------------
             // VERIFY PHASE
             // -----------------
             var streamCopy2 = new MemoryStream(streamCopy1.ToArray());
             var verifyManager = new StreamSaveManager(streamCopy2);
-            var verifyTask = verifyManager.LoadOrCreate("TestSave");
-            while (!verifyTask.IsCompleted)
-            {
-                yield return null;
-            }
+            verifyManager.LoadOrCreate("TestSave");
             
             var verifiedValue = verifyManager.DeserializeAndCaptureStructValue("TestInt", 0);
             Assert.AreEqual(42, verifiedValue.Value);
         }
 
-        [UnityTest]
-        public IEnumerator TestSaveLoadSaveWithoutCapturingCustomValue()
+        [Test]
+        public void TestSaveLoadSaveWithoutCapturingCustomValue()
         {
             // Test for meta data: save custom value, load it, then save again without capturing
             var stream = new MemoryStream();
@@ -504,31 +473,19 @@ namespace SaveSystem.Tests
             // SAVE PHASE 1
             // -----------------
             var saveManager1 = new StreamSaveManager(stream);
-            var saveInitTask1 = saveManager1.LoadOrCreate("TestSave");
-            while (!saveInitTask1.IsCompleted)
-            {
-                yield return null;
-            }
+            saveManager1.LoadOrCreate("TestSave");
             
             var stringValue = saveManager1.DeserializeAndCaptureCustomValue<string>("TestString", () => "default");
             stringValue.Value = "hello world";
             
-            var saveTask1 = saveManager1.SaveExplicitly();
-            while (!saveTask1.IsCompleted)
-            {
-                yield return null;
-            }
+            saveManager1.SaveExplicitly();
 
             // -----------------
             // LOAD PHASE
             // -----------------
             var streamCopy1 = new MemoryStream(stream.ToArray());
             var loadManager = new StreamSaveManager(streamCopy1);
-            var loadTask = loadManager.LoadOrCreate("TestSave");
-            while (!loadTask.IsCompleted)
-            {
-                yield return null;
-            }
+            loadManager.LoadOrCreate("TestSave");
 
             // Resets position here because StreamSaveManager uses the same stream for both save and load
             streamCopy1.Position = 0;
@@ -536,29 +493,21 @@ namespace SaveSystem.Tests
             // -----------------
             // SAVE PHASE 2 (without capturing new values)
             // -----------------
-            var saveTask2 = loadManager.SaveExplicitly();
-            while (!saveTask2.IsCompleted)
-            {
-                yield return null;
-            }
+            loadManager.SaveExplicitly();
 
             // -----------------
             // VERIFY PHASE
             // -----------------
             var streamCopy2 = new MemoryStream(streamCopy1.ToArray());
             var verifyManager = new StreamSaveManager(streamCopy2);
-            var verifyTask = verifyManager.LoadOrCreate("TestSave");
-            while (!verifyTask.IsCompleted)
-            {
-                yield return null;
-            }
+            verifyManager.LoadOrCreate("TestSave");
             
             var verifiedValue = verifyManager.DeserializeAndCaptureCustomValue<string>("TestString", () => "default");
             Assert.AreEqual("hello world", verifiedValue.Value);
         }
 
-        [UnityTest]
-        public IEnumerator TestSaveLoadSaveWithoutCapturingMixedData()
+        [Test]
+        public void TestSaveLoadSaveWithoutCapturingMixedData()
         {
             // Test for both meta and non-meta data: save both types, load them, then save again without capturing
             var stream = new MemoryStream();
@@ -567,11 +516,7 @@ namespace SaveSystem.Tests
             // SAVE PHASE 1
             // -----------------
             var saveManager1 = new StreamSaveManager(stream);
-            var saveInitTask1 = saveManager1.LoadOrCreate("TestSave");
-            while (!saveInitTask1.IsCompleted)
-            {
-                yield return null;
-            }
+            saveManager1.LoadOrCreate("TestSave");
             
             // Non-meta data (struct)
             var intValue = saveManager1.DeserializeAndCaptureStructValue("TestInt", 0);
@@ -590,22 +535,14 @@ namespace SaveSystem.Tests
             savableValue._value2 = 88.8f;
             savableValue._value5 = "savable string";
             
-            var saveTask1 = saveManager1.SaveExplicitly();
-            while (!saveTask1.IsCompleted)
-            {
-                yield return null;
-            }
+            saveManager1.SaveExplicitly();
 
             // -----------------
             // LOAD PHASE
             // -----------------
             var streamCopy1 = new MemoryStream(stream.ToArray());
             var loadManager = new StreamSaveManager(streamCopy1);
-            var loadTask = loadManager.LoadOrCreate("TestSave");
-            while (!loadTask.IsCompleted)
-            {
-                yield return null;
-            }
+            loadManager.LoadOrCreate("TestSave");
 
             // Resets position here because StreamSaveManager uses the same stream for both save and load
             streamCopy1.Position = 0;
@@ -613,22 +550,14 @@ namespace SaveSystem.Tests
             // -----------------
             // SAVE PHASE 2 (without capturing new values)
             // -----------------
-            var saveTask2 = loadManager.SaveExplicitly();
-            while (!saveTask2.IsCompleted)
-            {
-                yield return null;
-            }
+            loadManager.SaveExplicitly();
 
             // -----------------
             // VERIFY PHASE
             // -----------------
             var streamCopy2 = new MemoryStream(streamCopy1.ToArray());
             var verifyManager = new StreamSaveManager(streamCopy2);
-            var verifyTask = verifyManager.LoadOrCreate("TestSave");
-            while (!verifyTask.IsCompleted)
-            {
-                yield return null;
-            }
+            verifyManager.LoadOrCreate("TestSave");
             
             var verifiedInt = verifyManager.DeserializeAndCaptureStructValue("TestInt", 0);
             var verifiedVector = verifyManager.DeserializeAndCaptureStructValue("TestVector", Vector3.zero, true);
@@ -643,8 +572,8 @@ namespace SaveSystem.Tests
             Assert.AreEqual("savable string", verifiedSavable._value5);
         }
 
-        [UnityTest]
-        public IEnumerator TestConcurrentSaveOperations()
+        [Test]
+        public void TestConcurrentSaveOperations()
         {
             // This test verifies that multiple save managers can operate on the same directory
             // without causing sharing violations
@@ -657,30 +586,16 @@ namespace SaveSystem.Tests
                 var saveManager2 = new SaveSystem.SaveManagers.FileSaveManager(tempDir);
                 
                 // Initialize both save managers with different save IDs
-                var initTask1 = saveManager1.LoadOrCreate("save1");
-                var initTask2 = saveManager2.LoadOrCreate("save2");
-                
-                while (!initTask1.IsCompleted || !initTask2.IsCompleted)
-                {
-                    yield return null;
-                }
+                saveManager1.LoadOrCreate("save1");
+                saveManager2.LoadOrCreate("save2");
                 
                 // Create some data in both save managers
                 var value1 = saveManager1.DeserializeAndCaptureStructValue("TestValue", 42);
                 var value2 = saveManager2.DeserializeAndCaptureStructValue("TestValue", 84);
                 
                 // Trigger concurrent saves
-                var saveTask1 = saveManager1.SaveExplicitly();
-                var saveTask2 = saveManager2.SaveExplicitly();
-                
-                while (!saveTask1.IsCompleted || !saveTask2.IsCompleted)
-                {
-                    yield return null;
-                }
-                
-                // Verify both saves completed successfully
-                Assert.IsTrue(saveTask1.IsCompletedSuccessfully, "Save manager 1 should complete successfully");
-                Assert.IsTrue(saveTask2.IsCompletedSuccessfully, "Save manager 2 should complete successfully");
+                saveManager1.SaveExplicitly();
+                saveManager2.SaveExplicitly();
                 
                 // Verify the files were created
                 Assert.IsTrue(File.Exists(Path.Combine(tempDir, "save1")), "Save file 1 should exist");

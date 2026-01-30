@@ -9,6 +9,15 @@
       },
       "hash": "53e1baac3cde90c46934f82ee1d61802d2bd6651"
     },
+    "com.coplaydev.unity-mcp": {
+      "version": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.0.2"
+      },
+      "hash": "6b1c2c97c436feaa61acf030bc03c1e6afe680ba"
+    },
     "com.cysharp.unitask": {
       "version": "2.5.10",
       "depth": 0,
@@ -32,6 +41,13 @@
         "com.kekchpek.ara": "0.12.0"
       },
       "url": "https://package.openupm.com"
+    },
+    "com.rlabrecque.steamworks.net": {
+      "version": "https://github.com/rlabrecque/Steamworks.NET.git?path=/com.rlabrecque.steamworks.net#2025.163.0",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "98d6584e4509dd514768cc28c3f02026fbdd6cc7"
     },
     "com.svermeulen.extenject": {
       "version": "9.2.0-stcf3",
@@ -248,6 +264,13 @@
     "com.unity.nuget.mono-cecil": {
       "version": "1.11.5",
       "depth": 3,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.nuget.newtonsoft-json": {
+      "version": "3.2.1",
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"

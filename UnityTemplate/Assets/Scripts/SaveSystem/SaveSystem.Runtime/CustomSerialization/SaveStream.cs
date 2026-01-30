@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using SaveSystem.Codec;
+using kekchpek.SaveSystem.Codec;
 
-namespace SaveSystem.CustomSerialization
+namespace kekchpek.SaveSystem.CustomSerialization
 {
     public class SaveStream : ISaveStream
     {

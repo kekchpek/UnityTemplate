@@ -2,11 +2,11 @@
     "name": "kekchpek.Auxiliary",
     "rootNamespace": "kekchpek.Auxiliary",
     "references": [
-        "GUID:cb00ff09e8802414c9c9a290874a6eb7",
         "GUID:6055be8ebefd69e48b49212b09b47b2f",
         "GUID:68765d262e2128e4ab49c983f3411946",
         "GUID:72d1fea872bd7a449bf3818f2b0a6708",
-        "GUID:2433a835b74f84fe1b7babb146d6dba4"
+        "GUID:0d8beb7f090555447a6cf5ce9e54dbb4",
+        "GUID:516a5277b8c3b4f4c8cc86b77b1591ff"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

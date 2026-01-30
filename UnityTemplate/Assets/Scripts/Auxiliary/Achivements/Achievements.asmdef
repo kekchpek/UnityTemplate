@@ -1,0 +1,20 @@
+{
+    "name": "Achievements",
+    "rootNamespace": "kekchpek.Achievements",
+    "references": [
+        "GUID:40227352dfb484109abdbcdf4d604f2e",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:3f816d3b90c1646bea94a73fe960574e",
+        "GUID:0e7ab01b0f594741b2d20fe4c9a84bba",
+        "GUID:3740148870b28fa4c911798a43673d4f"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

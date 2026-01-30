@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using UnityEngine;
 
-namespace SaveSystem.SaveManagers
+namespace kekchpek.SaveSystem.SaveManagers
 {
     public class FileSaveManager : BaseSaveManager
     {

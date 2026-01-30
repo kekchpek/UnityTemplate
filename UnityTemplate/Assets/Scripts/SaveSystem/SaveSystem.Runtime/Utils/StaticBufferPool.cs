@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SaveSystem.Utils
+namespace kekchpek.SaveSystem.Utils
 {
     public static class StaticBufferPool
     {
@@ -12,10 +12,8 @@ namespace SaveSystem.Utils
         private static readonly object _lock = new object();
 
         public static IEnumerable<(int size, int elementSize, int count)> GetPoolStats() {
-            lock (_lock) {
-                foreach (var (key, pools) in _pools) {
-                    yield return (key.size, key.elementSize, pools.Count);
-                }
+            foreach (var (key, pools) in _pools) {
+                yield return (key.size, key.elementSize, pools.Count);
             }
         }
 
@@ -28,20 +26,16 @@ namespace SaveSystem.Utils
             {
                 if (size <= 0 || count <= 0)
                     continue;
-
-                lock (_lock)
+                if (!_pools.TryGetValue((size, elementSize), out var pool))
                 {
-                    if (!_pools.TryGetValue((size, elementSize), out var pool))
-                    {
-                        pool = new Stack<NativeList>();
-                        _pools[(size, elementSize)] = pool;
-                    }
+                    pool = new Stack<NativeList>();
+                    _pools[(size, elementSize)] = pool;
+                }
 
-                    for (int i = 0; i < count; i++)
-                    {
-                        // Element size is 1 byte, capacity equals requested size.
-                        pool.Push(new NativeList(elementSize, size));
-                    }
+                for (int i = 0; i < count; i++)
+                {
+                    // Element size is 1 byte, capacity equals requested size.
+                    pool.Push(new NativeList(elementSize, size));
                 }
             }
         }
@@ -51,15 +45,13 @@ namespace SaveSystem.Utils
             if (size <= 0)
                 throw new ArgumentException("Size must be positive", nameof(size));
 
-            lock (_lock)
+            if (_pools.TryGetValue((size, elementSize), out var pool) && pool.Count > 0)
             {
-                if (_pools.TryGetValue((size, elementSize), out var pool) && pool.Count > 0)
-                {
-                    var buffer = pool.Pop();
-                    buffer.SetCount(0);
-                    return buffer;
-                }
+                var buffer = pool.Pop();
+                buffer.SetCount(0);
+                return buffer;
             }
+
 
             // Element size is 1 byte, capacity equals requested size.
             return new NativeList(elementSize, size);
@@ -70,20 +62,18 @@ namespace SaveSystem.Utils
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
-            lock (_lock)
+            var size = buffer.Capacity;
+            if (!_pools.TryGetValue((size, buffer.ElementSize), out var pool))
             {
-                var size = buffer.Capacity;
-                if (!_pools.TryGetValue((size, buffer.ElementSize), out var pool))
-                {
-                    pool = new Stack<NativeList>();
-                    _pools[(size, buffer.ElementSize)] = pool;
-                }
-
-                // Currently NativeList doesn't provide a direct API for clearing the content or resetting its count.
-                // As the count tracking is an internal detail, we simply push the buffer back to the pool and rely on
-                // the consumer to overwrite the previous data on the next use.
-                pool.Push(buffer);
+                pool = new Stack<NativeList>();
+                _pools[(size, buffer.ElementSize)] = pool;
             }
+
+            // Currently NativeList doesn't provide a direct API for clearing the content or resetting its count.
+            // As the count tracking is an internal detail, we simply push the buffer back to the pool and rely on
+            // the consumer to overwrite the previous data on the next use.
+            pool.Push(buffer);
+
         }
     }
 }

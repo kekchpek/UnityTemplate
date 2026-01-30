@@ -1,8 +1,10 @@
 {
   "dependencies": {
     "com.boxqkrtm.ide.cursor": "https://github.com/boxqkrtm/com.unity.ide.cursor.git",
+    "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
     "com.cysharp.unitask": "2.5.10",
     "com.kekchpek.umvvm": "0.19.0",
+    "com.rlabrecque.steamworks.net": "https://github.com/rlabrecque/Steamworks.NET.git?path=/com.rlabrecque.steamworks.net#2025.163.0",
     "com.unity.addressables": "2.7.4",
     "com.unity.collab-proxy": "2.10.2",
     "com.unity.feature.2d": "2.0.1",

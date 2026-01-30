@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using SaveSystem.CustomSerialization;
-using SaveSystem.Utils;
+using kekchpek.SaveSystem.CustomSerialization;
+using kekchpek.SaveSystem.Utils;
 
-namespace SaveSystem.Data
+namespace kekchpek.SaveSystem.Data
 {
     public interface IDataContainer : IDisposable
     {

@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using SaveSystem.CustomSerialization;
+using kekchpek.SaveSystem.CustomSerialization;
 using UnityEngine;
 
-namespace SaveSystem.SaveTypes
+namespace kekchpek.SaveSystem.SaveTypes
 {
     public abstract class BaseSavableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, ISaveObject
     {

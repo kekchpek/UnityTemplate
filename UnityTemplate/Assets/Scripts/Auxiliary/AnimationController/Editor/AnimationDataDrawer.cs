@@ -43,17 +43,6 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
                     SerializedProperty animationStateNameProperty = property.FindPropertyRelative("AnimationStateName");
                     Rect animationStateNameRect = new Rect(position.x, currentY, position.width, lineHeight);
                     EditorGUI.PropertyField(animationStateNameRect, animationStateNameProperty, new GUIContent("Animation State"));
-                    currentY += lineHeight + spacing;
-
-                    // Draw event fields for Unity animations
-                    SerializedProperty eventDispatcherProperty = property.FindPropertyRelative("EventDispatcher");
-                    Rect eventDispatcherRect = new Rect(position.x, currentY, position.width, lineHeight);
-                    EditorGUI.PropertyField(eventDispatcherRect, eventDispatcherProperty, new GUIContent("Event Dispatcher"));
-                    currentY += lineHeight + spacing;
-
-                    SerializedProperty completeEventProperty = property.FindPropertyRelative("CompleteAnimationEvent");
-                    Rect completeEventRect = new Rect(position.x, currentY, position.width, lineHeight);
-                    EditorGUI.PropertyField(completeEventRect, completeEventProperty, new GUIContent("Complete Event"));
                     break;
                     
                 case AnimationType.Spine:
@@ -96,8 +85,8 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            // Base height for type, name, and parallel flag
-            float height = EditorGUIUtility.singleLineHeight * 3 + EditorGUIUtility.standardVerticalSpacing * 2;
+            // Base height for type and parallel flag
+            float height = EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
             
             // Add height for type-specific fields
             SerializedProperty typeProperty = property.FindPropertyRelative("Type");
@@ -106,8 +95,8 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
             switch (animationType)
             {
                 case AnimationType.Unity:
-                    // Four additional fields for Unity animations (including event fields)
-                    height += EditorGUIUtility.singleLineHeight * 4 + EditorGUIUtility.standardVerticalSpacing * 3;
+                    // Two additional fields for Unity animations (Animator, AnimationState)
+                    height += EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
                     break;
                     
                 case AnimationType.Spine:

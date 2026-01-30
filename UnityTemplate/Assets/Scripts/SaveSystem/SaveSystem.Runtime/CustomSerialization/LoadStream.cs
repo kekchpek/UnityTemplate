@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
-using SaveSystem.Utils;
+using kekchpek.SaveSystem.Utils;
 
-namespace SaveSystem.CustomSerialization
+namespace kekchpek.SaveSystem.CustomSerialization
 {
     public class LoadStream : ILoadStream
     {

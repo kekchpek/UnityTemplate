@@ -1,0 +1,22 @@
+{
+    "name": "Startup.Core",
+    "rootNamespace": "Startup",
+    "references": [
+        "UniTask",
+        "Zenject",
+        "GameMasterConsole",
+        "GameSaves",
+        "Localization",
+        "kekchpek.SteamApi",
+        "Achievements"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
