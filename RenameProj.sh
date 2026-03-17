@@ -35,17 +35,20 @@ for DIR in "${EXCLUDED_DIRS[@]}"; do
     EXCLUDE_ARGS+=(-path "./$DIR" -prune -o)
 done
 
-# Rename files and directories
+# Rename files and directories (only rename the basename, not full path)
 find . -depth -name "*$OLD_NAME*" | while read -r FILE; do
-    NEW_FILE=$(echo "$FILE" | sed "s/$OLD_NAME/$NEW_NAME/g")
-    mv "$FILE" "$NEW_FILE"
-    echo "Renamed: $FILE -> $NEW_FILE"
+    DIR=$(dirname "$FILE")
+    BASENAME=$(basename "$FILE")
+    NEW_BASENAME=$(echo "$BASENAME" | sed "s/$OLD_NAME/$NEW_NAME/g")
+    mv "$FILE" "$DIR/$NEW_BASENAME"
+    echo "Renamed: $FILE -> $DIR/$NEW_BASENAME"
 done
 
 # Replace contents in all non-excluded files
+# Note: sed -i '' is required for macOS (empty string for no backup)
 find . "${EXCLUDE_ARGS[@]}" -type f -print | while read -r FILE; do
     if grep -q "$OLD_NAME" "$FILE"; then
-        sed -i "s/$OLD_NAME/$NEW_NAME/g" "$FILE"
+        sed -i '' "s/$OLD_NAME/$NEW_NAME/g" "$FILE"
         echo "Updated contents in: $FILE"
     fi
 done
