@@ -7,6 +7,7 @@ namespace kekchpek.Auxiliary.Application
     {
         IBindable<(int width, int height)> ScreenSize { get; }
         event Action ApplicationQuit;
+        void OpenURL(string url);
         void Quit();
     }
 }

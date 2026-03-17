@@ -10,107 +10,153 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
         {
             EditorGUI.BeginProperty(position, label, property);
             
-            // Get the animation type
             SerializedProperty typeProperty = property.FindPropertyRelative("Type");
-            AnimationType animationType = (AnimationType)typeProperty.enumValueIndex;
+            SerializedProperty parallelProperty = property.FindPropertyRelative("ExecuteInParallel");
+            SerializedProperty animationTypeDataProperty = property.FindPropertyRelative("_animationTypeData");
             
-            // Calculate the height for the property
             float lineHeight = EditorGUIUtility.singleLineHeight;
             float spacing = EditorGUIUtility.standardVerticalSpacing;
             float currentY = position.y;
             
-            // Draw the type field
             Rect typeRect = new Rect(position.x, currentY, position.width, lineHeight);
+            EditorGUI.BeginChangeCheck();
             EditorGUI.PropertyField(typeRect, typeProperty);
+            if (EditorGUI.EndChangeCheck())
+            {
+                AssignAnimationTypeData(animationTypeDataProperty, (AnimationType)typeProperty.enumValueIndex);
+                property.serializedObject.ApplyModifiedProperties();
+            }
             currentY += lineHeight + spacing;
             
-            // Draw the parallel flag
-            SerializedProperty parallelProperty = property.FindPropertyRelative("ExecuteInParallel");
             Rect parallelRect = new Rect(position.x, currentY, position.width, lineHeight);
             EditorGUI.PropertyField(parallelRect, parallelProperty);
             currentY += lineHeight + spacing;
-            
-            // Draw fields based on animation type
-            switch (animationType)
+
+            bool animationTypeDataChanged = EnsureAnimationTypeData(animationTypeDataProperty, (AnimationType)typeProperty.enumValueIndex);
+            if (animationTypeDataChanged)
             {
-                case AnimationType.Unity:
-                    // Unity Animation fields
-                    SerializedProperty animatorProperty = property.FindPropertyRelative("UnityAnimator");
-                    Rect animatorRect = new Rect(position.x, currentY, position.width, lineHeight);
-                    EditorGUI.PropertyField(animatorRect, animatorProperty, new GUIContent("Animator"));
-                    currentY += lineHeight + spacing;
-                    
-                    SerializedProperty animationStateNameProperty = property.FindPropertyRelative("AnimationStateName");
-                    Rect animationStateNameRect = new Rect(position.x, currentY, position.width, lineHeight);
-                    EditorGUI.PropertyField(animationStateNameRect, animationStateNameProperty, new GUIContent("Animation State"));
-                    break;
-                    
-                case AnimationType.Spine:
-                    // Spine Animation fields
-                    SerializedProperty skeletonGraphicProperty = property.FindPropertyRelative("SpineSkeleton");
-                    Rect skeletonGraphicRect = new Rect(position.x, currentY, position.width, lineHeight);
-                    EditorGUI.PropertyField(skeletonGraphicRect, skeletonGraphicProperty, new GUIContent("Skeleton Graphic"));
-                    currentY += lineHeight + spacing;
-                    
-                    SerializedProperty skeletonAnimationProperty = property.FindPropertyRelative("SpineSkeletonAnimation");
-                    Rect skeletonAnimationRect = new Rect(position.x, currentY, position.width, lineHeight);
-                    EditorGUI.PropertyField(skeletonAnimationRect, skeletonAnimationProperty, new GUIContent("Skeleton Animation"));
-                    currentY += lineHeight + spacing;
-                    
-                    SerializedProperty animationNameProperty = property.FindPropertyRelative("AnimationName");
-                    Rect animationNameRect = new Rect(position.x, currentY, position.width, lineHeight);
-                    EditorGUI.PropertyField(animationNameRect, animationNameProperty, new GUIContent("Animation Name"));
-                    currentY += lineHeight + spacing;
-                    
-                    SerializedProperty animationLayerProperty = property.FindPropertyRelative("SpineAnimationLayer");
-                    Rect animationLayerRect = new Rect(position.x, currentY, position.width, lineHeight);
-                    EditorGUI.PropertyField(animationLayerRect, animationLayerProperty, new GUIContent("Animation Layer"));
-                    break;
-                    
-                case AnimationType.AnimationController:
-                    // AnimationController fields
-                    SerializedProperty targetControllerProperty = property.FindPropertyRelative("TargetAnimationController");
-                    Rect targetControllerRect = new Rect(position.x, currentY, position.width, lineHeight);
-                    EditorGUI.PropertyField(targetControllerRect, targetControllerProperty, new GUIContent("Target Controller"));
-                    currentY += lineHeight + spacing;
-                    
-                    SerializedProperty targetSequenceProperty = property.FindPropertyRelative("TargetSequenceName");
-                    Rect targetSequenceRect = new Rect(position.x, currentY, position.width, lineHeight);
-                    EditorGUI.PropertyField(targetSequenceRect, targetSequenceProperty, new GUIContent("Target Sequence"));
-                    break;
+                property.serializedObject.ApplyModifiedProperties();
             }
+
+            DrawTypeSpecificFields(position, animationTypeDataProperty, (AnimationType)typeProperty.enumValueIndex, lineHeight, spacing, ref currentY);
             
             EditorGUI.EndProperty();
         }
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            // Base height for type and parallel flag
-            float height = EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
-            
-            // Add height for type-specific fields
             SerializedProperty typeProperty = property.FindPropertyRelative("Type");
-            AnimationType animationType = (AnimationType)typeProperty.enumValueIndex;
-            
+            int typeSpecificFieldsCount = GetTypeSpecificFieldsCount((AnimationType)typeProperty.enumValueIndex);
+
+            float lineHeight = EditorGUIUtility.singleLineHeight;
+            float spacing = EditorGUIUtility.standardVerticalSpacing;
+            float lines = 2 + typeSpecificFieldsCount;
+            float spaces = 1 + typeSpecificFieldsCount;
+            float height = (lineHeight * lines) + (spacing * spaces);
+
+            return height;
+        }
+
+        private static void DrawTypeSpecificFields(Rect position, SerializedProperty animationTypeDataProperty, AnimationType animationType, float lineHeight, float spacing, ref float currentY)
+        {
             switch (animationType)
             {
                 case AnimationType.Unity:
-                    // Two additional fields for Unity animations (Animator, AnimationState)
-                    height += EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
+                    DrawField(position, animationTypeDataProperty, "UnityAnimator", "Animator", lineHeight, spacing, ref currentY);
+                    DrawField(position, animationTypeDataProperty, "AnimationStateName", "Animation State", lineHeight, spacing, ref currentY);
                     break;
-                    
                 case AnimationType.Spine:
-                    // Four additional fields for Spine animations (SkeletonGraphic, SkeletonAnimation, AnimationName, AnimationLayer)
-                    height += EditorGUIUtility.singleLineHeight * 4 + EditorGUIUtility.standardVerticalSpacing * 3;
+                    DrawField(position, animationTypeDataProperty, "SpineSkeleton", "Skeleton Graphic", lineHeight, spacing, ref currentY);
+                    DrawField(position, animationTypeDataProperty, "SpineSkeletonAnimation", "Skeleton Animation", lineHeight, spacing, ref currentY);
+                    DrawField(position, animationTypeDataProperty, "AnimationName", "Animation Name", lineHeight, spacing, ref currentY);
+                    DrawField(position, animationTypeDataProperty, "SpineAnimationLayer", "Animation Layer", lineHeight, spacing, ref currentY);
                     break;
-                    
+                case AnimationType.SpineClearTrack:
+                    DrawField(position, animationTypeDataProperty, "SpineSkeleton", "Skeleton Graphic", lineHeight, spacing, ref currentY);
+                    DrawField(position, animationTypeDataProperty, "SpineSkeletonAnimation", "Skeleton Animation", lineHeight, spacing, ref currentY);
+                    DrawField(position, animationTypeDataProperty, "TrackIndex", "Track Index", lineHeight, spacing, ref currentY);
+                    DrawField(position, animationTypeDataProperty, "Duration", "Duration", lineHeight, spacing, ref currentY);
+                    break;
                 case AnimationType.AnimationController:
-                    // Two additional fields for AnimationController type
-                    height += EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
+                    DrawField(position, animationTypeDataProperty, "TargetAnimationController", "Target Controller", lineHeight, spacing, ref currentY);
+                    DrawField(position, animationTypeDataProperty, "TargetSequenceName", "Target Sequence", lineHeight, spacing, ref currentY);
                     break;
             }
-            
-            return height;
+        }
+
+        private static int GetTypeSpecificFieldsCount(AnimationType animationType)
+        {
+            switch (animationType)
+            {
+                case AnimationType.Unity:
+                    return 2;
+                case AnimationType.Spine:
+                    return 4;
+                case AnimationType.SpineClearTrack:
+                    return 4;
+                case AnimationType.AnimationController:
+                    return 2;
+                default:
+                    return 0;
+            }
+        }
+
+        private static void DrawField(Rect position, SerializedProperty parentProperty, string relativePropertyName, string label, float lineHeight, float spacing, ref float currentY)
+        {
+            SerializedProperty childProperty = parentProperty.FindPropertyRelative(relativePropertyName);
+            if (childProperty == null)
+            {
+                return;
+            }
+
+            Rect fieldRect = new Rect(position.x, currentY, position.width, lineHeight);
+            EditorGUI.PropertyField(fieldRect, childProperty, new GUIContent(label));
+            currentY += lineHeight + spacing;
+        }
+
+        private static bool EnsureAnimationTypeData(SerializedProperty animationTypeDataProperty, AnimationType animationType)
+        {
+            if (animationTypeDataProperty.managedReferenceValue is UnityAnimationTypeData && animationType == AnimationType.Unity)
+            {
+                return false;
+            }
+
+            if (animationTypeDataProperty.managedReferenceValue is SpineAnimationTypeData && animationType == AnimationType.Spine)
+            {
+                return false;
+            }
+
+            if (animationTypeDataProperty.managedReferenceValue is SpineClearTrackAnimationTypeData && animationType == AnimationType.SpineClearTrack)
+            {
+                return false;
+            }
+
+            if (animationTypeDataProperty.managedReferenceValue is AnimationControllerAnimationTypeData && animationType == AnimationType.AnimationController)
+            {
+                return false;
+            }
+
+            AssignAnimationTypeData(animationTypeDataProperty, animationType);
+            return true;
+        }
+
+        private static void AssignAnimationTypeData(SerializedProperty animationTypeDataProperty, AnimationType animationType)
+        {
+            switch (animationType)
+            {
+                case AnimationType.Unity:
+                    animationTypeDataProperty.managedReferenceValue = new UnityAnimationTypeData();
+                    break;
+                case AnimationType.Spine:
+                    animationTypeDataProperty.managedReferenceValue = new SpineAnimationTypeData();
+                    break;
+                case AnimationType.SpineClearTrack:
+                    animationTypeDataProperty.managedReferenceValue = new SpineClearTrackAnimationTypeData();
+                    break;
+                case AnimationType.AnimationController:
+                    animationTypeDataProperty.managedReferenceValue = new AnimationControllerAnimationTypeData();
+                    break;
+            }
         }
     }
 } 

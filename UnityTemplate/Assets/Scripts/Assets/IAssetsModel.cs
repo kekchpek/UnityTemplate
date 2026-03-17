@@ -43,6 +43,13 @@ namespace AssetsSystem
         Task CacheAsset<T>(string path);
 
         /// <summary>
+        /// Checks if an addressable asset exists at the specified path.
+        /// </summary>
+        /// <param name="path">The path to check.</param>
+        /// <returns>True if asset exists, false otherwise.</returns>
+        Task<bool> AssetExists(string path);
+
+        /// <summary>
         /// Gets cached assets. Throws an exception if asset is not cached.
         /// </summary>
         /// <param name="path">The path to the asset.</param>

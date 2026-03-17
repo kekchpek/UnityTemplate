@@ -5,10 +5,11 @@ namespace kekchpek.Auxiliary.Pools
     public class AdvancedListPool<T>
     {
 
-        private readonly Stack<List<T>> _pool = new(5);
+        private readonly Stack<List<T>> _pool;
 
         public AdvancedListPool(int listsCount = 1, int listCapacity = 1)
         {
+            _pool = new Stack<List<T>>(listsCount);
             for (int i = 0; i < listsCount; i++)
             {
                 _pool.Push(new List<T>(listCapacity));

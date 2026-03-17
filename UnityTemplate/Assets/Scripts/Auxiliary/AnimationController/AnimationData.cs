@@ -1,5 +1,4 @@
 using System;
-using AuxiliaryComponents;
 using Spine.Unity;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -7,59 +6,64 @@ using UnityEngine.Serialization;
 namespace kekchpek.Auxiliary.AnimationControllerTool
 {
     [Serializable]
-    public class AnimationData
+    public class AnimationData : ISerializationCallbackReceiver
     {
         public AnimationType Type;
         public bool ExecuteInParallel;
-        
-        [HideInInspector]
-        public Animator UnityAnimator;
 
-        [HideInInspector]
-        [FormerlySerializedAs("TriggerName")]
-        public string AnimationStateName;
-        
-        [HideInInspector]
-        public SkeletonGraphic SpineSkeleton;
-        [HideInInspector]
-        public SkeletonAnimation SpineSkeletonAnimation;
-        [HideInInspector]
-        public string AnimationName;
-        [HideInInspector]
-        public int SpineAnimationLayer;
-        
-        [HideInInspector]
-        public AnimationController TargetAnimationController;
-        [HideInInspector]
-        public string TargetSequenceName;
+        [SerializeReference]
+        private IAnimationTypeData _animationTypeData;
 
-        public void OnValidate()
+        public UnityAnimationTypeData UnityData => _animationTypeData as UnityAnimationTypeData;
+        public SpineAnimationTypeData SpineData => _animationTypeData as SpineAnimationTypeData;
+        public SpineClearTrackAnimationTypeData SpineClearTrackData => _animationTypeData as SpineClearTrackAnimationTypeData;
+        public AnimationControllerAnimationTypeData AnimationControllerData => _animationTypeData as AnimationControllerAnimationTypeData;
+
+        public void OnBeforeSerialize()
         {
-            bool isUnityType = Type == AnimationType.Unity;
-            bool isSpineType = Type == AnimationType.Spine;
-            bool isAnimationControllerType = Type == AnimationType.AnimationController;
+        }
 
-            // Clear Unity fields if not Unity type
-            if (!isUnityType)
+        public void OnAfterDeserialize()
+        {
+            AssignDataByType();
+        }
+
+        private void AssignDataByType()
+        {
+            if (Type == AnimationType.Unity && _animationTypeData is UnityAnimationTypeData)
             {
-                UnityAnimator = null;
-                AnimationStateName = string.Empty;
+                return;
             }
 
-            // Clear Spine fields if not Spine type
-            if (!isSpineType)
+            if (Type == AnimationType.Spine && _animationTypeData is SpineAnimationTypeData)
             {
-                SpineSkeleton = null;
-                SpineSkeletonAnimation = null;
-                AnimationName = string.Empty;
-                SpineAnimationLayer = 0;
+                return;
             }
-            
-            // Clear AnimationController fields if not AnimationController type
-            if (!isAnimationControllerType)
+
+            if (Type == AnimationType.AnimationController && _animationTypeData is AnimationControllerAnimationTypeData)
             {
-                TargetAnimationController = null;
-                TargetSequenceName = string.Empty;
+                return;
+            }
+
+            if (Type == AnimationType.SpineClearTrack && _animationTypeData is SpineClearTrackAnimationTypeData)
+            {
+                return;
+            }
+
+            switch (Type)
+            {
+                case AnimationType.Unity:
+                    _animationTypeData = new UnityAnimationTypeData();
+                    break;
+                case AnimationType.Spine:
+                    _animationTypeData = new SpineAnimationTypeData();
+                    break;
+                case AnimationType.SpineClearTrack:
+                    _animationTypeData = new SpineClearTrackAnimationTypeData();
+                    break;
+                case AnimationType.AnimationController:
+                    _animationTypeData = new AnimationControllerAnimationTypeData();
+                    break;
             }
         }
     }

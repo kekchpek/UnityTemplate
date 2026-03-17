@@ -33,6 +33,8 @@ namespace kekchpek.SaveSystem
         private readonly Dictionary<Type, SaveData> _capturedMetaData = new();
 
         private readonly Dictionary<Type, ICustomCodec> _customCodecs = new();
+
+        private Dictionary<string, object> _createdMutableValues = new();
         
         private IDataContainer _loadedDataContainer;
         private IDataContainer _loadedMetaDataContainer;
@@ -68,7 +70,7 @@ namespace kekchpek.SaveSystem
                         _loadedDataContainer = dataContainer;
                 }
                 var val = dataContainer.DeserializeStructValue(valueKey, true, defaultValue);
-                var newVal = CreateMutableValue(valueKey, val, isMetaValue);
+                var newVal = GetOrCreateMutableValue(valueKey, val, isMetaValue);
                 return newVal;
             }
         }
@@ -227,6 +229,7 @@ namespace kekchpek.SaveSystem
                     }
                 }
                 _capturedData.Clear();
+                _createdMutableValues.Clear();
                 foreach (var (_, val) in _capturedMetaData)
                 {
                     if (val.Data is NativeList nativeList)
@@ -355,8 +358,23 @@ namespace kekchpek.SaveSystem
 
         public abstract string[] GetSaves();
 
-        private unsafe IMutable<T> CreateMutableValue<T>(string name, T val = default, bool isMeta = false) where T : unmanaged
+        public abstract void RemoveSave(string saveId);
+
+        private unsafe IMutable<T> GetOrCreateMutableValue<T>(string name, T val = default, bool isMeta = false) where T : unmanaged
         {
+
+            if (_createdMutableValues.TryGetValue(name, out var createdMutableValue))
+            {
+                if (createdMutableValue is IMutable<T> mutableVal)
+                {
+                    return mutableVal;
+                }
+                else
+                {
+                    Debug.LogError($"Created mutable value for key {name} is not of type IMutable<T>. This indicates a bug in the save system usage.");
+                }
+            }
+
             var capturedDataDict = isMeta ? _capturedMetaData : _capturedData;
             var capturedData = GetOrCreateCaptured<T>(capturedDataDict, () => new SaveData
             {
@@ -372,6 +390,7 @@ namespace kekchpek.SaveSystem
                 var existingVal = new Mutable<T>(val);
                 existingVal.Bind((T x) => list.Set(existingIndex, &x));
                 existingVal.Bind(OnAnyValueChanged, false);
+                _createdMutableValues[name] = existingVal;
                 return existingVal;
             }
             
@@ -383,6 +402,7 @@ namespace kekchpek.SaveSystem
             newVal.Bind((T x) => dataList.Set(index, &x));
             newVal.Bind(OnAnyValueChanged, false);
 
+            _createdMutableValues.Add(name, newVal);
             return newVal;
         }
 

@@ -173,6 +173,16 @@ namespace AssetsSystem
             return LoadAsset<T>(path);
         }
 
+        public async Task<bool> AssetExists(string path)
+        {
+            var locationsHandle = Addressables.LoadResourceLocationsAsync(path);
+            await locationsHandle.Task;
+            bool exists = locationsHandle.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded 
+                          && locationsHandle.Result.Count > 0;
+            Addressables.Release(locationsHandle);
+            return exists;
+        }
+
         public T GetCachedAsset<T>(string path)
         {
             if (_cache.TryGetValue(path, out var asset))

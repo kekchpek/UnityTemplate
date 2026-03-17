@@ -23,6 +23,11 @@ namespace kekchpek.Auxiliary.Application
             ApplicationQuit?.Invoke();
         }
 
+        public void OpenURL(string url)
+        {
+            UnityEngine.Application.OpenURL(url);
+        }
+
         public void Quit()
         {
 #if UNITY_EDITOR

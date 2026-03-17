@@ -8,7 +8,8 @@
         "GameSaves",
         "Localization",
         "kekchpek.SteamApi",
-        "Achievements"
+        "Achievements",
+        "kekchpek.Auxiliary"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -2,6 +2,7 @@
     "name": "Achievements",
     "rootNamespace": "kekchpek.Achievements",
     "references": [
+        "GUID:378b6e6b9e6c543bc9f357bcb05812ff",
         "GUID:40227352dfb484109abdbcdf4d604f2e",
         "GUID:f51ebe6a0ceec4240a699833d6309b23",
         "GUID:3f816d3b90c1646bea94a73fe960574e",

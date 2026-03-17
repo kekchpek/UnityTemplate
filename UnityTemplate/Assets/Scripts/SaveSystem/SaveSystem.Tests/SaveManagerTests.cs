@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Collections;
-using UnityEngine.TestTools;
 using NUnit.Framework;
 using UnityEngine;
 using kekchpek.SaveSystem.CustomSerialization;
@@ -32,7 +30,13 @@ namespace kekchpek.SaveSystem.Tests
 
             public override string[] GetSaves()
             {
-                throw new NotImplementedException();
+                // Do nothing
+                return Array.Empty<string>();
+            }
+
+            public override void RemoveSave(string saveId)
+            {
+                // Do nothing
             }
 
             protected override void ReleaseStream(Stream s)

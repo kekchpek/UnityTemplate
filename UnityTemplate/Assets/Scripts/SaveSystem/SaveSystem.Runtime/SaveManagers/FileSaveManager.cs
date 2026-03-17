@@ -96,6 +96,25 @@ namespace kekchpek.SaveSystem.SaveManagers
             return paths;
         }
 
+        public override void RemoveSave(string saveId)
+        {
+            var filePath = $"{_folderPath}/{saveId}";
+            var normalizedPath = Path.GetFullPath(filePath);
+            var fileLock = GetOrCreateFileLock(normalizedPath);
+            fileLock.Wait();
+            try
+            {
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
+            finally
+            {
+                fileLock.Release();
+            }
+        }
+
         protected override void ReleaseStream(Stream s)
         {
             s.Dispose();

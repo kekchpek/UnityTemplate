@@ -3,6 +3,7 @@ using AssetsSystem;
 using GMConsole;
 using kekchpek.Achievements;
 using kekchpek.Auxiliary.Application;
+using kekchpek.Auxiliary.Configs;
 using kekchpek.Auxiliary.Time;
 using kekchpek.GameSaves;
 using kekchpek.Localization;
@@ -16,6 +17,7 @@ namespace DI.Core
         
         public override void InstallBindings()
         {
+            Container.Bind(new Type[] { typeof(IConfigsProvider), typeof(IConfigsLoader) }).To<ConfigsManager>().AsSingle();
             Container.Bind<IProjectStartupService>().To<ProjectStartupService>().AsSingle();
             Container.Install<GameSavesInstaller>();
             Container.Bind(new Type[] {

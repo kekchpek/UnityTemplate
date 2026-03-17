@@ -4,13 +4,13 @@
     "references": [
         "Zenject",
         "AssetsSystem",
-        "Startup",
         "Diagnostics",
+        "GameResources",
         "GameSaves",
         "kekchpek.Auxiliary",
         "GameMasterConsole",
-        "Achievements",
         "Localization",
+        "Achievements",
         "Startup.Core"
     ],
     "includePlatforms": [],

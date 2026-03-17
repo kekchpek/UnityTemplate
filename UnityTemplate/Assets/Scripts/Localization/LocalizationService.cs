@@ -56,7 +56,6 @@ namespace kekchpek.Localization
             }
             
             _localizationMutableModel.SetDefaultLocale(Locales[0]);
-            _localizationMutableModel.SetLocale(Locales[0]);
         }
 
         public void SetLocale(string localeKey)

@@ -82,9 +82,19 @@ namespace kekchpek.GameSaves
             // Do nothing
         }
 
+        public void RemoveSave(string saveId)
+        {
+            // Do nothing
+        }
+
         public UniTask<IReadOnlyList<SaveData>> GetSaves()
         {
             return UniTask.FromResult<IReadOnlyList<SaveData>>(System.Array.Empty<SaveData>());
+        }
+
+        public void ToggleAutosave(bool enabled, long autosaveIntervalMs)
+        {
+            // Do nothing
         }
     }
 }

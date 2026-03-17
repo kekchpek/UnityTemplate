@@ -1,0 +1,21 @@
+{
+    "name": "GameResources",
+    "rootNamespace": "GameResources",
+    "references": [
+        "GUID:3f816d3b90c1646bea94a73fe960574e",
+        "GUID:3740148870b28fa4c911798a43673d4f",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:0d8beb7f090555447a6cf5ce9e54dbb4",
+        "GUID:40227352dfb484109abdbcdf4d604f2e",
+        "GUID:0e7ab01b0f594741b2d20fe4c9a84bba"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

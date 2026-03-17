@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AssetsSystem;
 using Cysharp.Threading.Tasks;
 using GMConsole;
 using kekchpek.Achievements.Data;
-using Newtonsoft.Json;
-using UnityEngine;
+using kekchpek.Auxiliary.Configs;
 
 namespace kekchpek.Achievements
 {
@@ -22,21 +20,19 @@ namespace kekchpek.Achievements
         private const string RemoveAchivementCommand = "RemoveAch";
         private const string ShowAchievementsCommand = "ShowAch";
 
-        private const string AchievementsConfigPath = "Configs/AchievementsConfig";
-
         private readonly HashSet<IAchievementsService> _achivementsServices = new();
 
         private readonly IAchievementsMutableModel _achivementsModel;
-        private readonly IAssetsModel _assetsModel;
+        private readonly IConfigsProvider _configsProvider;
         private readonly IGameMasterCommandRegistry _gameMasterCommandsRegestry;
 
         public AchievementsAggregatorServcie(
             IAchievementsMutableModel achivementsModel,
-            IAssetsModel assetsModel,
+            IConfigsProvider configsProvider,
             IGameMasterCommandRegistry gameMasterCommandRegistry)
         {
             _achivementsModel = achivementsModel;
-            _assetsModel = assetsModel;
+            _configsProvider = configsProvider;
             _gameMasterCommandsRegestry = gameMasterCommandRegistry;
             _gameMasterCommandsRegestry.RegisterCommand(
                 AddAchievementCommand, "Adds achievement", 
@@ -72,12 +68,11 @@ namespace kekchpek.Achievements
             args.SetResult(stringBuilder.ToString());
         }
 
-        public async UniTask Initialize()
+        public UniTask Initialize()
         {
-            var achievementsConfigText = await _assetsModel.LoadAsset<TextAsset>(AchievementsConfigPath);
-            var config = JsonConvert.DeserializeObject<AchievementsConfig>(achievementsConfigText.text);
+            var config = _configsProvider.GetConfig<AchievementsConfig>("AchievementsConfig");
             _achivementsModel.SetupAchievements(config.AchievementIds);
-            _assetsModel.ReleaseLoadedAssets(AchievementsConfigPath);
+            return UniTask.CompletedTask;
         }
 
         public void AddAchivementsService(IAchievementsService achivementsService)

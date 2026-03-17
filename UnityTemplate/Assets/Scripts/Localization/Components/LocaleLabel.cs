@@ -56,8 +56,7 @@ namespace kekchpek.Localization.Components
 
             _inited = true;
             _text = GetComponent<TMP_Text>();
-            _localizationModel.OnLocaleChanged += UpdateString;
-            UpdateString();
+            _localizationModel.CurrentLocale.Bind(UpdateString);
         }
 
         private void UpdateString()
@@ -83,7 +82,7 @@ namespace kekchpek.Localization.Components
 
         private void OnDestroy()
         {
-            _localizationModel.OnLocaleChanged -= UpdateString;
+            _localizationModel.CurrentLocale.Unbind(UpdateString);
         }
     }
 }

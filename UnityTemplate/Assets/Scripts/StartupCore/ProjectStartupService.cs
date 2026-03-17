@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using GMConsole;
 using kekchpek.Achievements;
+using kekchpek.Auxiliary.Configs;
 using kekchpek.GameSaves;
 using kekchpek.Localization;
 using kekchpek.SteamApi.Achievements;
@@ -16,6 +17,7 @@ namespace Startup.Core
         private readonly ISteamInitService _steamInitService;
         private readonly ICoreAchievementsInitializer _coreAchievevementsInitializer;
         private readonly ISteamAchivementsInitializer _steamAchievementsInitializer;
+        private readonly IConfigsLoader _configsLoader;
 
         public bool IsCompleted { get; private set; } = false;
 
@@ -25,7 +27,8 @@ namespace Startup.Core
             IGameSaveManager gameSaveManager,
             ILocalizationService localizationService,
             ICoreAchievementsInitializer coreAchievementsInitializer,
-            ISteamAchivementsInitializer steamAchivementsInitializer)
+            ISteamAchivementsInitializer steamAchivementsInitializer,
+            IConfigsLoader configsLoader)
         {
             _steamInitService = steamInitService;
             _gameMasterServer = gameMasterServer;
@@ -33,17 +36,18 @@ namespace Startup.Core
             _localizationService = localizationService;
             _coreAchievevementsInitializer = coreAchievementsInitializer;
             _steamAchievementsInitializer = steamAchivementsInitializer;
+            _configsLoader = configsLoader;
         }
 
         public async UniTask Startup()
         {
+            _configsLoader.LoadDefaultConfigs();
             _gameMasterServer.StartServer();
             await _gameSaveManager.Initialize();
             await _coreAchievevementsInitializer.Initialize();
             _steamInitService.Initialize();
             _steamAchievementsInitializer.Initialize();
             await _localizationService.LoadData();
-            _localizationService.SetLocale("EN");
             IsCompleted = true;
         }
     }

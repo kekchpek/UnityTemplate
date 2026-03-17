@@ -1,11 +1,11 @@
 using System;
+using AsyncReactAwait.Bindable;
 
 namespace kekchpek.Localization
 {
     public interface ILocalizationModel
     {
-        event Action OnLocaleChanged;
-        string GetCurrentLocale();
+        IBindable<string> CurrentLocale { get; }
         string GetLocalizedString(string key);
     }
 }

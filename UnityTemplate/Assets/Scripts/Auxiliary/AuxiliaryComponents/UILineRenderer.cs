@@ -1,3 +1,4 @@
+using kekchpek.Auxiliary.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,7 +8,7 @@ namespace ArmorGuild.MVVM.Views.SkillTree.Component
     public class UILineRenderer : MaskableGraphic
     {
         [SerializeField]
-        private Vector2[] _points = new Vector2[2];
+        private HyperList<Vector2> _points = new HyperList<Vector2>(2);
         [SerializeField]
         private float _width = 1f;
 
@@ -19,7 +20,7 @@ namespace ArmorGuild.MVVM.Views.SkillTree.Component
         [SerializeField]
         private Vector2 _pointsShift = Vector2.zero;
 
-        public Vector2[] Points
+        public HyperList<Vector2> Points
         {
             get => _points;
             set
@@ -89,11 +90,11 @@ namespace ArmorGuild.MVVM.Views.SkillTree.Component
         {
             vh.Clear();
 
-            if (_points == null || _points.Length < 2)
+            if (_points == null || _points.Count < 2)
                 return;
 
             int vertexIndex = 0;
-            for (int i = 0; i < _points.Length - 1; i++)
+            for (int i = 0; i < _points.Count - 1; i++)
             {
                 Vector2 start = _points[i] * _pointsScale + _pointsShift;
                 Vector2 end = _points[i + 1] * _pointsScale + _pointsShift;

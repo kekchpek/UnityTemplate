@@ -14,9 +14,13 @@ namespace kekchpek.GameSaves
 
         void SaveExplicitly();
 
+        void ToggleAutosave(bool enabled, long autosaveIntervalMs);
+
         void LoadOrCreate(string saveId);
         
         string[] GetSaveIds();
+
+        void RemoveSave(string saveId);
 
         ICustomCodec<T> GetCodec<T>();
 

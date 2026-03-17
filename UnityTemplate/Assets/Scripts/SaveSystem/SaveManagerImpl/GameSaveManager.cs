@@ -5,7 +5,6 @@ using kekchpek.GameSaves.Data;
 using kekchpek.GameSaves.Static;
 using AsyncReactAwait.Bindable;
 using kekchpek.GameSaves.Codecs;
-using Newtonsoft.Json;
 using kekchpek.SaveSystem;
 using kekchpek.SaveSystem.Codec;
 using kekchpek.SaveSystem.Data;
@@ -15,7 +14,6 @@ using UnityEngine;
 using UnityEngine.Pool;
 using Cysharp.Threading.Tasks;
 using kekchpek.Auxiliary.Application;
-using AssetsSystem;
 using kekchpek.Auxiliary.Time;
 using kekchpek.Auxiliary.Time.Extensions;
 
@@ -23,9 +21,14 @@ namespace kekchpek.GameSaves
 {
     public class GameSaveManager : IGameSaveController, IGameSaveManager
     {
+
+        public static string SaveDataFolder = Application.persistentDataPath + "/GameSaves/";
+
         private readonly Mutable<bool> _isInitialized = new(false);
         private const string SelectedProfileKey = "SelectedProfile";
-        private const string SaveConfigPath = "Configs/SaveConfig";
+
+        private bool _autosaveEnabled;
+        private long _autosaveIntervalMs;
 
         private readonly Dictionary<string, BaseSaveManager> _exclusiveDataProviders = new();
 
@@ -33,10 +36,7 @@ namespace kekchpek.GameSaves
         private BaseSaveManager _settingsSaveManager;
         private BaseSaveManager _commonDataSaveManager;
         private readonly IApplicationService _applicationService;
-        private readonly IAssetsModel _assetsModel;
         private readonly ITimeManager _timeManager;
-
-        private SaveConfig _config;
 
         private IMutable<string> _selectedProfile;
 
@@ -44,21 +44,17 @@ namespace kekchpek.GameSaves
 
         public GameSaveManager(
             IApplicationService applicationService,
-            IAssetsModel assetsModel,
             ITimeManager timeManager) {
             _applicationService = applicationService;
-            _assetsModel = assetsModel;
             _timeManager = timeManager;
         }
 
-        public async UniTask Initialize() {
+        public UniTask Initialize() {
             Debug.Log("[GameSaveManager] Initializing save system...");
-            var configJson = await _assetsModel.LoadAsset<TextAsset>(SaveConfigPath);
-            _config = JsonConvert.DeserializeObject<SaveConfig>(configJson.text);
-            StaticBufferPool.Prewarm(_config.PrewarmedBuffers);
+            StaticBufferPool.Prewarm(SaveSystemContacts.PrewarmedBuffers);
             
-            var savePath = Application.persistentDataPath + "/" + _config.DataFolder;
-            var gameSavePath = savePath + "/" + _config.SaveFolder;
+            var savePath = SaveDataFolder + SaveSystemContacts.DataFolder;
+            var gameSavePath = savePath + "/" + SaveSystemContacts.SaveFolder;
             
             Debug.Log($"[GameSaveManager] Setting up save paths:\n" +
                      $"Game saves: {gameSavePath}\n" +
@@ -67,13 +63,11 @@ namespace kekchpek.GameSaves
             _gameSaveManager = new FileSaveManager(gameSavePath);
             _settingsSaveManager = new FileSaveManager(savePath);
             _commonDataSaveManager = new FileSaveManager(savePath);
-
-            _assetsModel.ReleaseLoadedAssets(SaveConfigPath);
-            _settingsSaveManager.LoadOrCreate(_config.SettingsSaveFile);
-            _commonDataSaveManager.LoadOrCreate(_config.CommonSaveFile);
-            _commonDataSaveManager.SaveOnChangesDebounceMs = (int)_config.CommonDataDebounceIntervalMs;
+            _settingsSaveManager.LoadOrCreate(SaveSystemContacts.SettingsSaveFile);
+            _commonDataSaveManager.LoadOrCreate(SaveSystemContacts.CommonSaveFile);
+            _commonDataSaveManager.SaveOnChangesDebounceMs = (int)SaveSystemContacts.CommonDataDebounceIntervalMs;
             _commonDataSaveManager.MaxSaveOnChangesTimeMs = 100000000;
-            _settingsSaveManager.SaveOnChangesDebounceMs = (int)_config.SettingsDebounceIntervalMs;
+            _settingsSaveManager.SaveOnChangesDebounceMs = (int)SaveSystemContacts.SettingsDebounceIntervalMs;
             _settingsSaveManager.MaxSaveOnChangesTimeMs = 100000000;
 
             _settingsSaveManager.SaveOnChangesEnabled = true;
@@ -86,11 +80,8 @@ namespace kekchpek.GameSaves
 
             RegisterCodecs();
 
-            // Launches the autosave
-            if (_config.AutosaveEnabled)
-                Autosave();
-
             _isInitialized.Value = true;
+            return UniTask.CompletedTask;
         }
         
         public void RefreshSelectedProfile() 
@@ -128,6 +119,17 @@ namespace kekchpek.GameSaves
                 
                 Debug.Log("[GameSaveManager] Saving common data...");
                 _commonDataSaveManager.SaveExplicitly();
+
+                Debug.Log("[GameSaveManager] Saving settings data...");
+                _settingsSaveManager.SaveExplicitly();
+
+                Debug.Log("[GameSaveManager] Saving exclusive data...");
+                foreach (var provider in _exclusiveDataProviders)
+                {
+                    Debug.Log($"[GameSaveManager] Saving exclusive data for provider: {provider.Key}");
+                    provider.Value.SaveExplicitly();
+                }
+
                 Debug.Log("[GameSaveManager] All saves completed successfully");
             }
             catch (Exception e)
@@ -154,7 +156,16 @@ namespace kekchpek.GameSaves
             {
                 Debug.LogWarning("[GameSaveManager] Skipping autosave - no profile selected");
             }
-            _timeManager.AddCallbackIn(_config.AutosaveIntervalMs * TimeSpan.TicksPerMillisecond, Autosave);
+            if (_autosaveEnabled)
+                _timeManager.AddCallbackIn(_autosaveIntervalMs * TimeSpan.TicksPerMillisecond, Autosave);
+        }
+
+        public void ToggleAutosave(bool enabled, long autosaveIntervalMs)
+        {
+            _autosaveEnabled = enabled;
+            _autosaveIntervalMs = autosaveIntervalMs;
+            if (enabled && _isInitialized.Value)
+                _timeManager.AddCallbackIn(autosaveIntervalMs * TimeSpan.TicksPerMillisecond, Autosave);
         }
 
         string IGameSaveController.CurrentSaveId => _gameSaveManager.CurrentSaveId;
@@ -164,6 +175,7 @@ namespace kekchpek.GameSaves
         public ISaveDataProvider SettingsDataProvider => _settingsSaveManager;
 
         void IGameSaveController.SaveExplicitly() => _gameSaveManager.SaveExplicitly();
+        void IGameSaveController.ToggleAutosave(bool enabled, long autosaveIntervalMs) => ToggleAutosave(enabled, autosaveIntervalMs);
         string[] IGameSaveController.GetSaveIds() => _gameSaveManager.GetSaves();
 
         void IGameSaveController.LoadOrCreate(string saveId) {
@@ -171,7 +183,16 @@ namespace kekchpek.GameSaves
             _gameSaveManager.LoadOrCreate(saveId);
             _selectedProfile.Value = saveId;
         }
-        
+
+        void IGameSaveController.RemoveSave(string saveId)
+        {
+            _gameSaveManager.RemoveSave(saveId);
+            if (_selectedProfile.Value == saveId)
+            {
+                _selectedProfile.Value = null;
+            }
+        }
+
         async UniTask<IReadOnlyList<SaveData>> IGameSaveController.GetSaves()
         {
             var saves = _gameSaveManager.GetSaves();
@@ -215,7 +236,7 @@ namespace kekchpek.GameSaves
             {
                 return provider;
             }
-            var newProvider = new FileSaveManager(Application.persistentDataPath + "/" + _config.DataFolder);
+            var newProvider = new FileSaveManager(SaveDataFolder + SaveSystemContacts.DataFolder);
             newProvider.LoadOrCreate(dataName);
             _exclusiveDataProviders.Add(dataName, newProvider);
             return newProvider;

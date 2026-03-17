@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using AsyncReactAwait.Bindable;
+using kekchpek.GameSaves;
 using UnityEngine;
 
 namespace kekchpek.Localization
@@ -12,12 +14,24 @@ namespace kekchpek.Localization
         public event Action OnLocaleChanged;
 
         private IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> _localizationData;
-        private string _currentLocale;
+        private readonly IGameSaveManager _gameSaveManager;
+        private IMutable<string> _currentLocale;
         private string _defaultLocale;
 
-        public string GetCurrentLocale()
+        public IBindable<string> CurrentLocale => _currentLocale;
+
+        public LocalizationModel(IGameSaveManager gameSaveManager)
         {
-            return _currentLocale;
+            _gameSaveManager = gameSaveManager;
+            _gameSaveManager.IsInitialized.Bind(OnGameSaveManagerInitialized);
+        }
+
+        private void OnGameSaveManagerInitialized(bool isInitialized)
+        {
+            if (isInitialized)
+            {
+                _currentLocale = _gameSaveManager.GameDataProvider.DeserializeAndCaptureCustomValue("Localization/CurrentLocale", () => "EN");
+            }
         }
 
         public string GetLocalizedString(string key)
@@ -29,7 +43,7 @@ namespace kekchpek.Localization
             }
 
             string stringToReturn = null;
-            if (_localizationData.TryGetValue(_currentLocale, out var localeData))
+            if (_localizationData.TryGetValue(_currentLocale.Value, out var localeData))
             {
                 if (localeData.TryGetValue(key, out var localizedString))
                 {
@@ -75,8 +89,7 @@ namespace kekchpek.Localization
 
         public void SetLocale(string localeKey)
         {
-            _currentLocale = localeKey;
-            OnLocaleChanged?.Invoke();
+            _currentLocale.Value = localeKey;
         }
 
         public void SetData(IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> data)

@@ -1,3 +1,4 @@
+using UnityMVVM.DI;
 using Zenject;
 
 namespace kekchpek.Auxiliary.Time
@@ -7,6 +8,8 @@ namespace kekchpek.Auxiliary.Time
         public override void InstallBindings()
         {
             Container.Bind<ITimeManager>().To<TimeManager>().FromNewComponentOnNewGameObject().AsSingle();
+            Container.ProvideAccessForViewModelLayer<ITimeManager>();
+            Container.ProvideAccessForViewLayer<ITimeManager>();
         }
     }
 }
