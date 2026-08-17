@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Cysharp.Threading.Tasks;
+using Diagnostics.Time;
 using GMConsole;
 using kekchpek.Achievements.Data;
 using kekchpek.Auxiliary.Configs;
+using UnityEngine;
 
 namespace kekchpek.Achievements
 {
@@ -19,8 +21,11 @@ namespace kekchpek.Achievements
         private const string AddAchievementCommand = "AddAch";
         private const string RemoveAchivementCommand = "RemoveAch";
         private const string ShowAchievementsCommand = "ShowAch";
+        private const string ClearAchievementCommand = "ClearAch";
 
         private readonly HashSet<IAchievementsService> _achivementsServices = new();
+
+        private bool _isInitialized = false;
 
         private readonly IAchievementsMutableModel _achivementsModel;
         private readonly IConfigsProvider _configsProvider;
@@ -39,13 +44,23 @@ namespace kekchpek.Achievements
                 HandleAddAchievement
             );
             _gameMasterCommandsRegestry.RegisterCommand(
-                AddAchievementCommand, "Removes achievement", 
+                RemoveAchivementCommand, "Removes achievement", 
                 HandleRemoveAchievement
             );
             _gameMasterCommandsRegestry.RegisterCommand(
                 ShowAchievementsCommand, "Shows achievements", 
                 HandleShowAchievements
             );
+            _gameMasterCommandsRegestry.RegisterCommand(
+                ClearAchievementCommand, "Clears achievement", 
+                HandleClearAchievement
+            );
+        }
+
+        private void HandleClearAchievement(GMArgs args) {
+            foreach (var achievementId in _achivementsModel.AchievementIds) {
+                ClearAchievement(achievementId);
+            }
         }
 
         private void HandleAddAchievement(GMArgs args) {
@@ -60,7 +75,12 @@ namespace kekchpek.Achievements
 
         private void HandleShowAchievements(GMArgs args) {
             var stringBuilder = new StringBuilder();
-            var maxAchLength = _achivementsModel.AchievementIds.Select(x => x.Length).Max();
+            var maxAchLength = 0;
+            foreach (var achievementId in _achivementsModel.AchievementIds) {
+                if (achievementId.Length > maxAchLength) {
+                    maxAchLength = achievementId.Length;
+                }
+            }
             foreach (var achievementId in _achivementsModel.AchievementIds) {
                 var unlockedStatus = _achivementsModel.GetAchievementUnlocked(achievementId).Value ? "Unlocked" : "Locked";
                 stringBuilder.AppendLine($"{achievementId.PadRight(maxAchLength)}: {unlockedStatus}");
@@ -68,26 +88,51 @@ namespace kekchpek.Achievements
             args.SetResult(stringBuilder.ToString());
         }
 
-        public UniTask Initialize()
+        public async UniTask Initialize()
         {
-            var config = _configsProvider.GetConfig<AchievementsConfig>("AchievementsConfig");
-            _achivementsModel.SetupAchievements(config.AchievementIds);
-            return UniTask.CompletedTask;
+            using (TimeDebug.StartMeasure("AchievementsAggregatorServcie.Initialize"))
+            {
+                var config = await _configsProvider.GetConfigAsync<AchievementsConfig>();
+                _achivementsModel.SetupAchievements(config.AchievementIds);
+                _isInitialized = true;
+            }
         }
 
         public void AddAchivementsService(IAchievementsService achivementsService)
         {
+            if (!_isInitialized) {
+                Debug.LogError("AchievementsAggregatorServcie is not initialized");
+                return;
+            }
+            if (_achivementsServices.Contains(achivementsService)) {
+                Debug.LogError("AchievementsAggregatorServcie already contains this achivements service");
+                return;
+            }
             _achivementsServices.Add(achivementsService);
-            
+            foreach (var achievementId in _achivementsModel.AchievementIds) {
+                if (_achivementsModel.GetAchievementUnlocked(achievementId).Value && 
+                    !achivementsService.IsAchievementUnlocked(achievementId)) 
+                {
+                    achivementsService.UnlockAchievement(achievementId);
+                }
+            }
         }
 
         public void RemoveAchivementsService(IAchievementsService achivementsService)
         {
+            if (!_isInitialized) {
+                Debug.LogError("AchievementsAggregatorServcie is not initialized");
+                return;
+            }
             _achivementsServices.Remove(achivementsService);
         }
 
         public void UnlockAchievement(string achievementId)
         {
+            if (!_isInitialized) {
+                Debug.LogError("AchievementsAggregatorServcie is not initialized");
+                return;
+            }
             foreach (var achivementsService in _achivementsServices) 
             {
                 achivementsService.UnlockAchievement(achievementId);
@@ -97,6 +142,10 @@ namespace kekchpek.Achievements
 
         public void ClearAchievement(string achievementId)
         {
+            if (!_isInitialized) {
+                Debug.LogError("AchievementsAggregatorServcie is not initialized");
+                return;
+            }
             foreach (var achivementsService in _achivementsServices) 
             {
                 achivementsService.ClearAchievement(achievementId);
@@ -106,12 +155,18 @@ namespace kekchpek.Achievements
 
         public bool IsAchievementUnlocked(string achievementId)
         {
+            if (!_isInitialized) {
+                Debug.LogError("AchievementsAggregatorServcie is not initialized");
+                return false;
+            }
             return _achivementsModel.GetAchievementUnlocked(achievementId).Value;
         }
 
         public void Dispose() {
             _gameMasterCommandsRegestry.UnregisterCommand(AddAchievementCommand);
             _gameMasterCommandsRegestry.UnregisterCommand(RemoveAchivementCommand);
+            _gameMasterCommandsRegestry.UnregisterCommand(ShowAchievementsCommand);
+            _gameMasterCommandsRegestry.UnregisterCommand(ClearAchievementCommand);
         }
     }
 }

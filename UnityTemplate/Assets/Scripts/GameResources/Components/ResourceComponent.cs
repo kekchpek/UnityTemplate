@@ -14,25 +14,17 @@ namespace kekchpek.MVVM.Models.GameResources.Components
         [SerializeField]
         private TMP_Text _amountText;
 
-        private Task<Sprite> _iconTask;
-
         public void SetAmount(string amount)
         {
             if (_amountText)
                 _amountText.text = amount;
         }
 
-        public async void SetIcon(Task<Sprite> t)
+        public void SetIcon(Sprite icon)
         {
             if (!_icon)
                 return;
-            if (t == _iconTask)
-                return;
-            _iconTask = t;
-            await t;
-            if (t == _iconTask)
-                _icon.sprite = t.Result;
-
+            _icon.sprite = icon;
         }
 
         public void SetFontColor(Color color)

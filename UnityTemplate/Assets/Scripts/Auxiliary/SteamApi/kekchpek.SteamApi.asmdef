@@ -5,7 +5,8 @@
         "com.rlabrecque.steamworks.net",
         "Zenject",
         "UniTask",
-        "Achievements"
+        "Achievements",
+        "Localization"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

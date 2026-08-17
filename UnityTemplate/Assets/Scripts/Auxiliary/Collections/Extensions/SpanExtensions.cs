@@ -5,7 +5,7 @@ namespace kekchpek.Auxiliary.Collections.Extensions
 {
     public static class SpanExtensions
     {
-        public static bool Contains<T>(in this ReadOnlySpan<T> span, T item, IEqualityComparer<T> comparer = null)
+        public static bool Contains<T>(this ReadOnlySpan<T> span, T item, IEqualityComparer<T> comparer = null)
         {
             foreach (var spanItem in span)
             {

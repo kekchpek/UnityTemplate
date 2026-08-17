@@ -18,6 +18,7 @@ namespace kekchpek.Auxiliary.AnimationControllerTool
         public SpineAnimationTypeData SpineData => _animationTypeData as SpineAnimationTypeData;
         public SpineClearTrackAnimationTypeData SpineClearTrackData => _animationTypeData as SpineClearTrackAnimationTypeData;
         public AnimationControllerAnimationTypeData AnimationControllerData => _animationTypeData as AnimationControllerAnimationTypeData;
+        public ObjectCreationAnimationTypeData ObjectCreationData => _animationTypeData as ObjectCreationAnimationTypeData;
 
         public void OnBeforeSerialize()
         {
@@ -50,6 +51,11 @@ namespace kekchpek.Auxiliary.AnimationControllerTool
                 return;
             }
 
+            if (Type == AnimationType.ObjectCreation && _animationTypeData is ObjectCreationAnimationTypeData)
+            {
+                return;
+            }
+
             switch (Type)
             {
                 case AnimationType.Unity:
@@ -63,6 +69,9 @@ namespace kekchpek.Auxiliary.AnimationControllerTool
                     break;
                 case AnimationType.AnimationController:
                     _animationTypeData = new AnimationControllerAnimationTypeData();
+                    break;
+                case AnimationType.ObjectCreation:
+                    _animationTypeData = new ObjectCreationAnimationTypeData();
                     break;
             }
         }

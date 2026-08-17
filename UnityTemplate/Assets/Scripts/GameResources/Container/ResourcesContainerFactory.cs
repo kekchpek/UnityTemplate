@@ -2,7 +2,7 @@ using Zenject;
 
 namespace kekchpek.MVVM.Models.GameResources.Container
 {
-    public class ResourcesContainerFactory : IFactory<IMutableResourcesContainer>
+    public class ResourcesContainerFactory<T> : IFactory<IMutableResourcesContainer<T>>
     {
         private readonly IInstantiator _instantiator;
 
@@ -11,9 +11,9 @@ namespace kekchpek.MVVM.Models.GameResources.Container
             _instantiator = instantiator;
         }
         
-        public IMutableResourcesContainer Create()
+        public IMutableResourcesContainer<T> Create()
         {
-            return _instantiator.Instantiate<ResourcesContainer>();
+            return _instantiator.Instantiate<ResourcesContainer<T>>();
         }
     }
 }

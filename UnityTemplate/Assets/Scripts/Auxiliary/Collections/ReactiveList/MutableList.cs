@@ -8,6 +8,7 @@ namespace kekchpek.Auxiliary.ReactiveList
 {
     public class MutableList<T> : IMutableList<T>
     {
+        public event Action Changed;
         private readonly HyperList<T> _list;
         private readonly Mutable<T> _lastAdded = new();
         private readonly Mutable<T> _lastRemoved = new();
@@ -41,14 +42,16 @@ namespace kekchpek.Auxiliary.ReactiveList
         {
             _list.Add(item);
             _lastAdded.ForceSet(item);
+            Changed?.Invoke();
         }
 
         public void Clear()
         {
             while (Count > 0)
             {
-                RemoveAt(Count - 1);
+                RemoveAtInternal(Count - 1);
             }
+            Changed?.Invoke();
         }
 
         public bool Contains(T item)
@@ -65,6 +68,7 @@ namespace kekchpek.Auxiliary.ReactiveList
             T outcome = _list[index];
             _list.RemoveAt(index);
             _lastRemoved.ForceSet(outcome);
+            Changed?.Invoke();
             return true;
         }
 
@@ -77,12 +81,26 @@ namespace kekchpek.Auxiliary.ReactiveList
         {
             _list.Insert(index, item);
             _lastAdded.ForceSet(item);
+            Changed?.Invoke();
         }
         
         public bool Contains(T item, IEqualityComparer<T> comparer = null)
             => _list.Contains(item, comparer);
 
         public void RemoveAt(int index)
+        {
+            RemoveAtInternal(index);
+            Changed?.Invoke();
+        }
+
+        public void SwapAndRemove(int index)
+        {
+            _list[index] = _list[Count - 1];
+            RemoveAtInternal(Count - 1);
+            Changed?.Invoke();
+        }
+
+        private void RemoveAtInternal(int index)
         {
             T outcome = _list[index];
             _list.RemoveAt(index);

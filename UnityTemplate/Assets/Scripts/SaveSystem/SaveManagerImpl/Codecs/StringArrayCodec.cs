@@ -6,7 +6,7 @@ namespace kekchpek.GameSaves.Codecs
 {
     public class StringArrayCodec : ICustomCodec<string[]>
     {
-        public string[] Deserialize(ILoadStream stream)
+        public string[] Deserialize(ILoadStream stream, int? customCodecVersion)
         {
             var count = stream.LoadStruct<int>();
             var stringArray = new string[count];
@@ -18,7 +18,7 @@ namespace kekchpek.GameSaves.Codecs
             return stringArray;
         }
 
-        public void Serialize(ISaveStream stream, object value)
+        public void Serialize(ISaveStream stream, object value, int? customCodecVersion)
         {
             if (value == null) 
             {
@@ -30,7 +30,7 @@ namespace kekchpek.GameSaves.Codecs
             stream.SaveStruct(stringArray.Length);
             foreach (var str in stringArray)
             {
-                stream.SaveCustom(str ?? string.Empty);
+                stream.SaveCustom(str ?? string.Empty, customCodecVersion);
             }
         }
     }

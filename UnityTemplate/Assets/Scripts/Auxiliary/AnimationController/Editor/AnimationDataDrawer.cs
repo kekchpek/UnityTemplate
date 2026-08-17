@@ -70,6 +70,7 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
                     DrawField(position, animationTypeDataProperty, "SpineSkeletonAnimation", "Skeleton Animation", lineHeight, spacing, ref currentY);
                     DrawField(position, animationTypeDataProperty, "AnimationName", "Animation Name", lineHeight, spacing, ref currentY);
                     DrawField(position, animationTypeDataProperty, "SpineAnimationLayer", "Animation Layer", lineHeight, spacing, ref currentY);
+                    DrawField(position, animationTypeDataProperty, "AnimationAlpha", "Animation Alpha", lineHeight, spacing, ref currentY);
                     break;
                 case AnimationType.SpineClearTrack:
                     DrawField(position, animationTypeDataProperty, "SpineSkeleton", "Skeleton Graphic", lineHeight, spacing, ref currentY);
@@ -81,6 +82,10 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
                     DrawField(position, animationTypeDataProperty, "TargetAnimationController", "Target Controller", lineHeight, spacing, ref currentY);
                     DrawField(position, animationTypeDataProperty, "TargetSequenceName", "Target Sequence", lineHeight, spacing, ref currentY);
                     break;
+                case AnimationType.ObjectCreation:
+                    DrawField(position, animationTypeDataProperty, "ObjectToSpawn", "Object To Spawn", lineHeight, spacing, ref currentY);
+                    DrawField(position, animationTypeDataProperty, "Container", "Container", lineHeight, spacing, ref currentY);
+                    break;
             }
         }
 
@@ -91,10 +96,12 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
                 case AnimationType.Unity:
                     return 2;
                 case AnimationType.Spine:
-                    return 4;
+                    return 5;
                 case AnimationType.SpineClearTrack:
                     return 4;
                 case AnimationType.AnimationController:
+                    return 2;
+                case AnimationType.ObjectCreation:
                     return 2;
                 default:
                     return 0;
@@ -136,6 +143,11 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
                 return false;
             }
 
+            if (animationTypeDataProperty.managedReferenceValue is ObjectCreationAnimationTypeData && animationType == AnimationType.ObjectCreation)
+            {
+                return false;
+            }
+
             AssignAnimationTypeData(animationTypeDataProperty, animationType);
             return true;
         }
@@ -156,7 +168,10 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
                 case AnimationType.AnimationController:
                     animationTypeDataProperty.managedReferenceValue = new AnimationControllerAnimationTypeData();
                     break;
+                case AnimationType.ObjectCreation:
+                    animationTypeDataProperty.managedReferenceValue = new ObjectCreationAnimationTypeData();
+                    break;
             }
         }
     }
-} 
+}

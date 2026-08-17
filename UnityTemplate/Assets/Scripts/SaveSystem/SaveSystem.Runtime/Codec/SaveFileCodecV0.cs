@@ -53,7 +53,7 @@ namespace kekchpek.SaveSystem.Codec
             {
                 if (TryReadKey(inputStream, out var key))
                 {
-                    var value = ReadValue(inputStream);
+                    var value = ReadValue(inputStream, null);
                     if (!string.IsNullOrEmpty(key))
                     {
                         yield return (key, value);
@@ -135,7 +135,7 @@ namespace kekchpek.SaveSystem.Codec
                                 var memoryStream = new MemoryStream();
                                 var saveObject = saveObjects[i];
                                 var saveStream = SaveStream.Get(memoryStream, this);
-                                saveObject.Serialize(saveStream);
+                                saveObject.Serialize(saveStream, null);
                                 saveStream.Dispose();
                                 var bytes = memoryStream.ToArray();
                                 WriteStruct(outputStream, (short)bytes.Length);
@@ -168,9 +168,9 @@ namespace kekchpek.SaveSystem.Codec
                     {
                         var i = 0;
                         foreach (var o in enumerable)
-                        {   
+                        {
                             WriteString(outputStream, saveData.DataNames[i++]);
-                            WriteCustom(outputStream, o, customCodec);
+                            WriteCustom(outputStream, o, customCodec, null);
                         }
                     }
                     else 
@@ -181,16 +181,16 @@ namespace kekchpek.SaveSystem.Codec
             }
         }
 
-        public void WriteCustom<T>(Stream s, T val)
+        public void WriteCustom<T>(Stream s, T val, int? customCodecVersion)
         {
-            WriteCustom(s, val, _customCodecsProvider.GetCustomCodec<T>());
+            WriteCustom(s, val, _customCodecsProvider.GetCustomCodec<T>(), customCodecVersion);
         }
 
-        private void WriteCustom(Stream s, object val, ICustomCodec customCodec)
+        private void WriteCustom(Stream s, object val, ICustomCodec customCodec, int? customCodecVersion)
         {
             using MemoryStream tmpStream = new MemoryStream();
             using var saveStream = SaveStream.Get(tmpStream, this);
-            customCodec.Serialize(saveStream, val);
+            customCodec.Serialize(saveStream, val, customCodecVersion);
             var bytes = tmpStream.ToArray();
             WriteStruct(s, (short)bytes.Length);
             s.Write(bytes);
@@ -233,7 +233,7 @@ namespace kekchpek.SaveSystem.Codec
             return *(T*)bufferPtr;
         }
 
-        public T ReadCustom<T>(Stream s)
+        public T ReadCustom<T>(Stream s, int? customCodecVersion)
         {
             var bytesLength = ReadStruct<short>(s);
             var bytes = new byte[bytesLength];  
@@ -244,11 +244,11 @@ namespace kekchpek.SaveSystem.Codec
                     $"Expected length {bytesLength}. Read bytes {readBytes}");
                 return default;
             }
-            using var stream = LoadStream.Get(new MemoryStream(bytes), null, this);
-            return _customCodecsProvider.GetCustomCodec<T>().Deserialize(stream);
+            using var stream = LoadStream.Get(new MemoryStream(bytes), null, this, customCodecVersion);
+            return _customCodecsProvider.GetCustomCodec<T>().Deserialize(stream, customCodecVersion);
         }
 
-        private unsafe ILoadStream ReadValue(Stream s)
+        private unsafe ILoadStream ReadValue(Stream s, int? customCodecVersion)
         {
             var bytesLength = ReadStruct<short>(s);
             if (bytesLength == 0)
@@ -268,7 +268,7 @@ namespace kekchpek.SaveSystem.Codec
 
             // Wrap the unmanaged buffer into a stream for further structured reads.
             var unmanagedStream = new UnmanagedMemoryStream((byte*)buffer.Data, bytesLength, bytesLength, FileAccess.Read);
-            return LoadStream.Get(unmanagedStream, buffer, this);
+            return LoadStream.Get(unmanagedStream, buffer, this, customCodecVersion);
         }
 
         private unsafe bool TryReadKey(Stream s, out string key)

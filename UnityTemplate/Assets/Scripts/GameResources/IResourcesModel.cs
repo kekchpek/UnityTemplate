@@ -2,7 +2,7 @@ using kekchpek.MVVM.Models.GameResources.Container;
 
 namespace kekchpek.MVVM.Models.GameResources
 {
-    public interface IResourcesModel : IResourcesContainer
+    public interface IResourcesModel : IResourcesContainer<float>
     {
     }
 }

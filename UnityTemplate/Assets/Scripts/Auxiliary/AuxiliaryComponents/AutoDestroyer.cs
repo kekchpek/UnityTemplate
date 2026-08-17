@@ -1,3 +1,5 @@
+using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace AuxiliaryComponents
@@ -6,9 +8,13 @@ namespace AuxiliaryComponents
     {
         [SerializeField] private float _delay;
 
-        private void Start()
+        [SerializeField] private bool _ignoreTimeScale = false;
+
+        private async void Start()
         {
-            Destroy(gameObject, _delay);
+            await UniTask.Delay(TimeSpan.FromSeconds(_delay), ignoreTimeScale: _ignoreTimeScale);
+            if (this)
+                Destroy(gameObject);
         }
     }
 }

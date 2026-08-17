@@ -1,6 +1,5 @@
 using kekchpek.AuxiliaryComponents.SimpleButton;
 using UnityEditor;
-using UnityEngine;
 
 namespace kekchpek.Auxiliary.Editor
 {
@@ -10,6 +9,9 @@ namespace kekchpek.Auxiliary.Editor
         private SerializedProperty _targetGraphicProp;
         private SerializedProperty _interactableProp;
         private SerializedProperty _onClickProp;
+        private SerializedProperty _sfxKeyProp;
+        private SerializedProperty _keyCodeProp;
+        private SerializedProperty _keyDownStateTimeProp;
         private SerializedProperty _useColorTransitionProp;
         private SerializedProperty _colorBlendModeProp;
         private SerializedProperty _baseColorProp;
@@ -35,6 +37,9 @@ namespace kekchpek.Auxiliary.Editor
             _targetGraphicProp = serializedObject.FindProperty("_targetGraphic");
             _interactableProp = serializedObject.FindProperty("_interactable");
             _onClickProp = serializedObject.FindProperty("_onClick");
+            _sfxKeyProp = serializedObject.FindProperty("_sfxKey");
+            _keyCodeProp = serializedObject.FindProperty("_keyCode");
+            _keyDownStateTimeProp = serializedObject.FindProperty("_keyDownStateTime");
             _useColorTransitionProp = serializedObject.FindProperty("_useColorTransition");
             _colorBlendModeProp = serializedObject.FindProperty("_colorBlendMode");
             _baseColorProp = serializedObject.FindProperty("_baseColor");
@@ -64,6 +69,11 @@ namespace kekchpek.Auxiliary.Editor
 
             EditorGUILayout.PropertyField(_interactableProp);
             EditorGUILayout.PropertyField(_onClickProp);
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("Audio", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_sfxKeyProp);
+            EditorGUILayout.PropertyField(_keyCodeProp);
+            EditorGUILayout.PropertyField(_keyDownStateTimeProp);
             EditorGUILayout.PropertyField(_useColorTransitionProp);
 
             if (_useColorTransitionProp.boolValue)

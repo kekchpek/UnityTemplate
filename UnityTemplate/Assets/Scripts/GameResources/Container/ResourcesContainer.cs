@@ -4,17 +4,18 @@ using System.Linq;
 using AsyncReactAwait.Bindable;
 using AsyncReactAwait.Bindable.BindableExtensions;
 using GameResources.Domain;
+using UnityEngine;
 
 namespace kekchpek.MVVM.Models.GameResources.Container
 {
-    public class ResourcesContainer : IMutableResourcesContainer
+    public class ResourcesContainer<T> : IMutableResourcesContainer<T>
     {
 
-        public event Action<ResourceId, float> ResourceChanged;
+        public event Action<ResourceId, T> ResourceChanged;
 
-        private readonly Dictionary<ResourceId, IMutable<float>> _resources = new();
+        private readonly Dictionary<ResourceId, IMutable<T>> _resources = new();
 
-        private Dictionary<ResourceId, IMutable<float>> Resources => _resources;
+        private Dictionary<ResourceId, IMutable<T>> Resources => _resources;
 
 
         public IEnumerable<ResourceId> GetKnownResources()
@@ -24,38 +25,53 @@ namespace kekchpek.MVVM.Models.GameResources.Container
 
         public IEnumerable<ResourceId> GetNonZeroResources()
         {
-            return Resources.Keys.Where(k => Resources[k].Value > 0d).ToArray();
+            return Resources.Keys.Where(k => !EqualityComparer<T>.Default.Equals(Resources[k].Value, default)).ToArray();
+        }
+
+        public void RegisterResource(ResourceId resourceId)
+        {
+            if (_resources.ContainsKey(resourceId))
+            {
+                Debug.LogError($"Resource {resourceId} already registered in this container.");
+                return;
+            }
+            _resources.Add(resourceId, CreateResourceValue(resourceId));
         }
         
-        public IBindable<float> GetResource(ResourceId resourceId)
+        public IBindable<T> GetResource(ResourceId resourceId)
         {
-            AddResourceIfNeeded(resourceId);
+            if (!_resources.ContainsKey(resourceId))
+            {
+                Debug.LogError($"Resource {resourceId} not found in this container.");
+                return new Mutable<T>(default);
+            }
             return _resources[resourceId];
         }
 
-        public void SetResource(ResourceId resourceId, float value)
+        public void SetResource(ResourceId resourceId, T value)
         {
-            AddResourceIfNeeded(resourceId);
+            if (!_resources.ContainsKey(resourceId))
+            {
+                Debug.LogError($"Resource {resourceId} not found in this container.");
+                return;
+            }
             var bindable = _resources[resourceId];
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (bindable.Value == value)
+            if (EqualityComparer<T>.Default.Equals(bindable.Value, value))
                 return;
             _resources[resourceId].Set(value);
             ResourceChanged?.Invoke(resourceId, value);
             
         }
 
-        protected virtual IMutable<float> CreateResourceValue(ResourceId id)
+        protected virtual IMutable<T> CreateResourceValue(ResourceId id)
         {
-            return new Mutable<float>();
+            return new Mutable<T>();
         }
 
-        private void AddResourceIfNeeded(ResourceId id)
+        public bool HasResource(ResourceId resourceId)
         {
-            if (!_resources.ContainsKey(id))
-            {
-                _resources.Add(id, CreateResourceValue(id));
-            }
+            return _resources.ContainsKey(resourceId);
         }
     }
 }

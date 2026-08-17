@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using kekchpek.AuxiliaryComponents.SimpleButton;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,11 +13,13 @@ namespace AuxiliaryComponents
     public class ButtonLocker : MonoBehaviour
     {
         private Button _button;
+        private SimpleButton _simpleButton;
         private HashSet<string> _activeLocks = new HashSet<string>();
         
         private void Awake()
         {
             _button = GetComponent<Button>();
+            _simpleButton = GetComponent<SimpleButton>();
         }
         
         /// <summary>
@@ -81,6 +84,7 @@ namespace AuxiliaryComponents
         
         private void UpdateButtonInteractability()
         {
+            _simpleButton.Interactable = _activeLocks.Count == 0;
             _button.interactable = _activeLocks.Count == 0;
         }
     }

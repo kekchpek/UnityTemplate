@@ -7,8 +7,13 @@ namespace GameResources.Domain
     {
 
         private static readonly Dictionary<int, string> _ids = new();
+            
+        public static readonly ResourceId Wood = new(nameof(Wood));  
+        public static readonly ResourceId Stone = new(nameof(Stone));
+        public static readonly ResourceId Crystals = new(nameof(Crystals));
+        public static readonly ResourceId Gold = new(nameof(Gold));
         
-        public static readonly ResourceId Scarabs = new(nameof(Scarabs));        public static ResourceId FromString(string s) => new(s);
+        public static ResourceId FromString(string s) => new(s);
 
         private readonly int _id;
 

@@ -2,7 +2,11 @@
     "name": "Auxiliary.Editor",
     "rootNamespace": "kekchpek.Auxiliary.Editor",
     "references": [
-        "kekchpek.Auxiliary"
+        "kekchpek.Auxiliary",
+        "AuxiliaryComponents",
+        "TNRD.NSubstitute",
+        "Zenject",
+        "UniTask"
     ],
     "includePlatforms": [
         "Editor"

@@ -6,7 +6,7 @@ namespace kekchpek.SaveSystem.Codec
 {
     public class StringCodec : ICustomCodec<string>
     {
-        public string Deserialize(ILoadStream stream)
+        public string Deserialize(ILoadStream stream, int? v = null)
         {
             var b = stream.LoadStruct<bool>();
             if (!b)
@@ -19,7 +19,7 @@ namespace kekchpek.SaveSystem.Codec
             }
         }
 
-        public void Serialize(ISaveStream stream, object value)
+        public void Serialize(ISaveStream stream, object value, int? v = null)
         {
             if (value == null)
             {

@@ -560,12 +560,20 @@ namespace GMConsole
         {
             if (string.IsNullOrEmpty(command))
             {
-                throw new ArgumentException("Command name cannot be null or empty", nameof(command));
+                Debug.LogError("Command name cannot be null or empty");
+                return;
             }
             
             if (handler == null)
             {
-                throw new ArgumentNullException(nameof(handler));
+                Debug.LogError("Handler cannot be null");
+                return;
+            }
+
+            if (_registeredCommands.ContainsKey(command))
+            {
+                Debug.LogError($"Command '{command}' is already registered");
+                return;
             }
             
             // Store command with original casing, dictionary will handle case-insensitive lookup

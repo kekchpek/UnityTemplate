@@ -9,7 +9,7 @@ namespace kekchpek.SaveSystem.CustomSerialization
         internal Stream Stream { get; }
 
         void SaveStruct<T>(T val) where T : unmanaged;
-        void SaveSabable<T>(T val) where T : ISaveObject, new();
-        void SaveCustom<T>(T val);
+        void SaveSabable<T>(T val, int? customCodecVersion) where T : ISaveObject, new();
+        void SaveCustom<T>(T val, int? customCodecVersion);
     }
 }

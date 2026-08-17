@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using AsyncReactAwait.Bindable;
 using kekchpek.GameSaves;
@@ -8,6 +9,7 @@ namespace kekchpek.Achievements
     public class AchievementsModel : IAchievementsMutableModel
     {
 
+        private string[] _achievementIds;
         private readonly Dictionary<string, IMutable<bool>> _achievements = new();
 
         private readonly IGameSaveManager _gameSaveManager;
@@ -17,13 +19,32 @@ namespace kekchpek.Achievements
             _gameSaveManager = gameSaveManager;
         }
 
-        public ICollection<string> AchievementIds => _achievements.Keys;
+        public ReadOnlySpan<string> AchievementIds => _achievementIds;
 
 
         public void SetupAchievements(IReadOnlyList<string> achievementIds)
         {
+            var achievementIdsArray = new string[achievementIds.Count];
+            for (int i = 0; i < achievementIds.Count; i++) {
+                achievementIdsArray[i] = achievementIds[i];
+            }
+            _achievementIds = achievementIdsArray;
+            _gameSaveManager.IsInitialized.Bind(OnGameSaveManagerInitialized);
+        }
+
+        private void OnGameSaveManagerInitialized(bool isInitialized)
+        {
+            if (isInitialized)
+            {
+                LoadData();
+            }
+            _gameSaveManager.IsInitialized.Unbind(OnGameSaveManagerInitialized);
+        }
+
+        private void LoadData()
+        {
             var dataProvider = _gameSaveManager.GetExclusiveDataProvider("Achievements");
-            foreach (var achievementId in achievementIds)
+            foreach (var achievementId in _achievementIds)
             {
                 _achievements[achievementId] = 
                     dataProvider.DeserializeAndCaptureStructValue(achievementId, false);

@@ -1,4 +1,5 @@
 using System;
+using kekchpek.Auxiliary.SteamApi.Localization;
 using kekchpek.SteamApi.Achievements;
 using kekchpek.SteamApi.Core;
 using Zenject;
@@ -16,6 +17,10 @@ namespace kekchpek.SteamApi.DI
 
             Container.Bind<ISteamAchivementsInitializer>()
                 .To<SteamAchievementsService>()
+                .AsSingle();
+            
+            Container.Bind<ISteamLocalizationService>()
+                .To<SteamLocalizationService>()
                 .AsSingle();
         }
     }

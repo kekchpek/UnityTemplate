@@ -12,7 +12,8 @@ namespace kekchpek.GameSaves
 
         void RefreshSelectedProfile();
 
-        void SaveExplicitly();
+        /// <returns>Hash to identify save data integrity. Can be null if save version is not integrity-protected.</returns>
+        byte[] SaveExplicitly();
 
         void ToggleAutosave(bool enabled, long autosaveIntervalMs);
 
@@ -24,6 +25,6 @@ namespace kekchpek.GameSaves
 
         ICustomCodec<T> GetCodec<T>();
 
-        UniTask<IReadOnlyList<SaveData>> GetSaves();
+        UniTask<IReadOnlyList<T>> GetSaves<T>() where T : BaseSaveData, new();
     }
 }

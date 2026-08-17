@@ -1,20 +1,27 @@
+using System;
 using System.Collections.Generic;
 using GameResources.Domain;
+using kekchpek.MVVM.Models.GameResources.Container;
 
 namespace kekchpek.MVVM.Models.GameResources.Prices
 {
-    public class PriceFactory : IPriceFactory
+    public class PriceFactory<T> : IPriceFactory<T>
     {
-        private readonly IResourcesModel _resourcesModel;
+        private readonly IResourcesContainer<T> _resourcesContainer;
 
-        public PriceFactory(IResourcesModel resourcesModel)
+        public PriceFactory(IResourcesContainer<T> resourcesContainer)
         {
-            _resourcesModel = resourcesModel;
+            _resourcesContainer = resourcesContainer;
         }
-        
-        public IPrice CreatePriceHandle(IReadOnlyList<(ResourceId resId, float amount)> price)
+
+        public IPrice<T> CreatePriceHandle(IReadOnlyList<(ResourceId resId, T amount)> price)
         {
-            return new Price(_resourcesModel, price);
+            return new Price<T>(_resourcesContainer, price);
+        }
+
+        public IPrice<T> CreatePriceHandle(ReadOnlySpan<(ResourceId resId, T amount)> price)
+        {
+            return new Price<T>(_resourcesContainer, price.ToArray());
         }
     }
 }

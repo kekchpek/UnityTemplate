@@ -17,6 +17,11 @@ namespace kekchpek.SaveSystem.CustomSerialization
         /// </summary>
         internal Stream Stream { get; }
 
+        /// <summary>
+        /// The version of the custom codec used to load the data.
+        /// </summary>
+        int? CustomCodecVersion { get; }
+
         T LoadStruct<T>() where T : unmanaged;
         T LoadSavable<T>() where T : ISaveObject, new();
         T LoadCustom<T>();

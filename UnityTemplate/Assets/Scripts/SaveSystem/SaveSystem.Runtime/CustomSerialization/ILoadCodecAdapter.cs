@@ -5,6 +5,6 @@ namespace kekchpek.SaveSystem.CustomSerialization
     internal interface ILoadCodecAdapter
     {
         T ReadStruct<T>(Stream s) where T : unmanaged;
-        T ReadCustom<T>(Stream s);
+        T ReadCustom<T>(Stream s, int? customCodecVersion);
     }
 }

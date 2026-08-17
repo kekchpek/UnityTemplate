@@ -1,0 +1,23 @@
+{
+    "name": "DynamicTexts",
+    "rootNamespace": "kekchpek.DynamicTexts",
+    "references": [
+        "BindableValues",
+        "Localization",
+        "DI",
+        "Zenject"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [
+        "AsyncReactAwait.dll",
+        "UnityMVVM.dll",
+        "Zenject-usage.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

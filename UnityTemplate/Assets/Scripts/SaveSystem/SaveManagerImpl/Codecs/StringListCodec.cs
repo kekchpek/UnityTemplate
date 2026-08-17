@@ -5,9 +5,9 @@ using kekchpek.SaveSystem.CustomSerialization;
 
 namespace kekchpek.GameSaves.Codecs
 {
-    public class StringListCodec : ICustomCodec<MutableList<string>>
+    public class StringMutableListCodec : ICustomCodec<MutableList<string>>
     {
-        public MutableList<string> Deserialize(ILoadStream stream)
+        public MutableList<string> Deserialize(ILoadStream stream, int? customCodecVersion)
         {
             var stringList = new MutableList<string>();
             var count = stream.LoadStruct<int>();
@@ -20,7 +20,7 @@ namespace kekchpek.GameSaves.Codecs
             return stringList;
         }
 
-        public void Serialize(ISaveStream stream, object value)
+        public void Serialize(ISaveStream stream, object value, int? customCodecVersion)
         {
             if (value == null) 
             {
@@ -33,7 +33,7 @@ namespace kekchpek.GameSaves.Codecs
             
             foreach (var str in stringList)
             {
-                stream.SaveCustom(str ?? string.Empty);
+                stream.SaveCustom(str ?? string.Empty, customCodecVersion);
             }
         }
     }

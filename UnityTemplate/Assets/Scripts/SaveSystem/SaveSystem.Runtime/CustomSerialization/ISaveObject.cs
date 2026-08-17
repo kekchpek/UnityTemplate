@@ -15,13 +15,13 @@ namespace kekchpek.SaveSystem.CustomSerialization
         /// </summary>
         /// <param name="loadStream">The input stream, that contains data in same order, in which
         /// it was written in <see cref="Serialize"/>.</param>
-        void Deserialize(ILoadStream loadStream);
+        void Deserialize(ILoadStream loadStream, int? customCodecVersion);
         
         /// <summary>
         /// Should pass the data, that is is required for state restoring, to the save stream.
         /// This data can be taken in the same order for load stream in <see cref="Deserialize"/>.
         /// </summary>
         /// <param name="saveStream">The output stream for saving data.</param>
-        void Serialize(ISaveStream saveStream);
+        void Serialize(ISaveStream saveStream, int? customCodecVersion);
     }
 }

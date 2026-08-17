@@ -1,10 +1,16 @@
+#if !(UNITY_STANDALONE_WIN || UNITY_STANDALONE_LINUX || UNITY_STANDALONE_OSX || STEAMWORKS_WIN || STEAMWORKS_LIN_OSX)
+#define DISABLESTEAMWORKS
+#endif
+
 using System;
 using AsyncReactAwait.Bindable;
-using Steamworks;
-using UnityEngine;
 
 namespace kekchpek.SteamApi.Core
 {
+#if !DISABLESTEAMWORKS
+    using Steamworks;
+    using UnityEngine;
+
     public class SteamInitService : ISteamInitService, IDisposable
     {
         private readonly Mutable<bool> _isInitialized = new(false);
@@ -37,7 +43,7 @@ namespace kekchpek.SteamApi.Core
 
                 if (!SteamAPI.Init())
                 {
-                    Debug.LogError("[Steamworks.NET] SteamAPI.Init() failed. " +
+                    Debug.LogWarning("[Steamworks.NET] SteamAPI.Init() failed. " +
                                    "Ensure Steam client is running and steam_appid.txt is present.");
                     return;
                 }
@@ -55,7 +61,7 @@ namespace kekchpek.SteamApi.Core
             {
                 Debug.Log("[Steamworks.NET] Steam Overlay is enabled");
             }
-            else 
+            else
             {
                 Debug.Log("[Steamworks.NET] Steam Overlay is disabled");
             }
@@ -65,23 +71,38 @@ namespace kekchpek.SteamApi.Core
         {
             _callbackRunnerObject = new GameObject("[Steam Callback Runner]");
             _callbackRunnerObject.AddComponent<SteamCallbackRunner>();
-            UnityEngine.Object.DontDestroyOnLoad(_callbackRunnerObject);
+            Object.DontDestroyOnLoad(_callbackRunnerObject);
         }
 
         public void Dispose()
         {
             if (_isInitialized.Value)
             {
+                SteamAPI.Shutdown();
                 if (_callbackRunnerObject != null)
                 {
-                    UnityEngine.Object.Destroy(_callbackRunnerObject);
+                    Object.Destroy(_callbackRunnerObject);
                     _callbackRunnerObject = null;
                 }
-                
-                SteamAPI.Shutdown();
                 _isInitialized.Value = false;
                 Debug.Log("[Steamworks.NET] Steam API shutdown.");
             }
         }
     }
+#else
+    public class SteamInitService : ISteamInitService, IDisposable
+    {
+        private readonly Mutable<bool> _isInitialized = new(false);
+
+        public IBindable<bool> IsInitialized => _isInitialized;
+
+        public void Initialize()
+        {
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+#endif
 }

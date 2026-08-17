@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace kekchpek.SaveSystem.SaveManagers
 {
-    public class FileSaveManager : BaseSaveManager
+    public class FileSaveManager : StreamSaveManager
     {
         private readonly string _folderPath;
         private const int MaxRetries = 5;
@@ -14,9 +14,15 @@ namespace kekchpek.SaveSystem.SaveManagers
         
         // Global coordination for file operations across all FileSaveManager instances
         private static readonly ConcurrentDictionary<string, SemaphoreSlim> _fileLocks = new();
-        private static readonly object _lockCreationLock = new object();
 
-        public FileSaveManager(string folderPath)
+        public FileSaveManager(
+            string folderPath,
+            int currentCustomCodecsVersion,
+            bool useFallback,
+            bool useMultithreading = true,
+            IMutableFactory mutableFactory = null
+            )
+            : base(currentCustomCodecsVersion, useMultithreading, useFallback, mutableFactory)
         {
             _folderPath = folderPath;
         }
@@ -29,7 +35,7 @@ namespace kekchpek.SaveSystem.SaveManagers
         protected override Stream GetStreamToWrite(string saveId)
         {
             if (!Directory.Exists(_folderPath)) Directory.CreateDirectory(_folderPath);
-            var filePath = $"{_folderPath}/{saveId}";
+            var filePath = GetSavePath(saveId);
             var normalizedPath = Path.GetFullPath(filePath);
             var fileLock = GetOrCreateFileLock(normalizedPath);
             
@@ -43,9 +49,9 @@ namespace kekchpek.SaveSystem.SaveManagers
                 {
                     try
                     {
-                        // Use FileStream with FileShare.Read to allow other processes to read while we write
-                        // This prevents sharing violations while still maintaining write exclusivity
-                        var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Read);
+                        // ReadWrite: AppendIntegrityHash must read the payload after Encode on the same stream.
+                        // FileShare.Read allows other processes to read while we hold the lock for writing.
+                        var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
                         return new FileLockWrapper(fileStream, fileLock);
                     }
                     catch (IOException ex) when (attempt < MaxRetries - 1)
@@ -57,7 +63,7 @@ namespace kekchpek.SaveSystem.SaveManagers
                 }
                 
                 // Final attempt without retry
-                return new FileLockWrapper(new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Read), fileLock);
+                return new FileLockWrapper(new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read), fileLock);
             }
             catch (Exception e)
             {
@@ -70,8 +76,13 @@ namespace kekchpek.SaveSystem.SaveManagers
 
         protected override bool TryGetStreamToRead(string saveId, out Stream stream)
         {
+            var fileName = GetSavePath(saveId);
+            return TryGetStreamToReadInternal(fileName, out stream);
+        }
+
+        private bool TryGetStreamToReadInternal(string fileName, out Stream stream)
+        {
             if (!Directory.Exists(_folderPath)) Directory.CreateDirectory(_folderPath);
-            var fileName = $"{_folderPath}/{saveId}";
             if (!File.Exists(fileName))
             {
                 stream = null;
@@ -98,7 +109,12 @@ namespace kekchpek.SaveSystem.SaveManagers
 
         public override void RemoveSave(string saveId)
         {
-            var filePath = $"{_folderPath}/{saveId}";
+            RemoveSaveFile(GetSavePath(saveId));
+            RemoveSaveFile(GetFallbackSavePath(saveId));
+        }
+
+        private void RemoveSaveFile(string filePath) 
+        {
             var normalizedPath = Path.GetFullPath(filePath);
             var fileLock = GetOrCreateFileLock(normalizedPath);
             fileLock.Wait();
@@ -118,6 +134,37 @@ namespace kekchpek.SaveSystem.SaveManagers
         protected override void ReleaseStream(Stream s)
         {
             s.Dispose();
+        }
+
+        protected override void FallbackSave(string saveId)
+        {
+            var filePath = GetSavePath(saveId);
+            var fallbackFilePath = GetFallbackSavePath(saveId);
+            if (File.Exists(filePath))
+            {
+                RemoveSaveFile(fallbackFilePath);
+                File.Copy(filePath, fallbackFilePath);
+            }
+            else 
+            {
+                Debug.LogError($"Fail to fallback save. File {filePath} not found.");
+            }
+        }
+
+        protected override bool TryGetFallbackStreamToRead(string saveId, out Stream stream)
+        {
+            var fileName = GetFallbackSavePath(saveId);
+            return TryGetStreamToReadInternal(fileName, out stream);
+        }
+
+        private string GetSavePath(string saveId)
+        {
+            return $"{_folderPath}/{saveId}";
+        }
+
+        private string GetFallbackSavePath(string saveId)
+        {
+            return $"{_folderPath}/{saveId}___fallbacksave";
         }
     }
 

@@ -9,9 +9,10 @@ namespace kekchpek.GameSaves
     {
         UniTask Initialize();
         IBindable<bool> IsInitialized { get; }
-        ISaveDataProvider GameDataProvider { get; }
+        IMultifileSaveDataProvider GameDataProvider { get; }
         ISaveDataProvider SettingsDataProvider { get; }
         void RegisterCustomCodec<T>(ICustomCodec<T> codec);
+        void UnregisterCustomCodec<T>(ICustomCodec<T> codec);
         ISaveDataProvider GetExclusiveDataProvider(string dataName);
     }
 }

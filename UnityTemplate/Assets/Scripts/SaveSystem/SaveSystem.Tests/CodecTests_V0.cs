@@ -43,11 +43,7 @@ namespace kekchpek.SaveSystem.Tests
             var decoded = codec.Decode(readStream);
             var (key, val, isMeta) = decoded.First();
             Assert.IsFalse(isMeta);
-            var loadStream = LoadStream.Get(
-                new UnmanagedMemoryStream((byte*)val.Data.Data, val.Data.AmountOfBytes, val.Data.AmountOfBytes, FileAccess.Read),
-                null,
-                codec);
-            Assert.AreEqual(((List<string>)data.Data)[0], codecProvider.GetCustomCodec<string>().Deserialize(loadStream));
+            Assert.AreEqual(((List<string>)data.Data)[0], codecProvider.GetCustomCodec<string>().Deserialize(val, val.CustomCodecVersion ?? null));
             Assert.AreEqual(data.DataNames[0], key);
         }
 

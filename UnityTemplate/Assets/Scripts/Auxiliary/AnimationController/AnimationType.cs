@@ -5,6 +5,7 @@ namespace kekchpek.Auxiliary.AnimationControllerTool
         Unity,
         Spine,
         SpineClearTrack,
-        AnimationController
+        AnimationController,
+        ObjectCreation
     }
 } 

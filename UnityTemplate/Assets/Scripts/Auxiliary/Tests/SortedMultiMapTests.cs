@@ -27,7 +27,11 @@ namespace Auxiliary.Tests
             map.Add(1, "third");
 
             Assert.IsTrue(map.TryGetValues(1, out var values));
-            var valueList = values.ToList();
+            var valueList = new List<string>();
+            foreach (var value in values)
+            {
+                valueList.Add(value);
+            }
             Assert.AreEqual(3, valueList.Count);
             Assert.AreEqual("first", valueList[0]);
             Assert.AreEqual("second", valueList[1]);
@@ -45,7 +49,8 @@ namespace Auxiliary.Tests
             map.Add(2, "two");
             map.Add(4, "four");
 
-            var keys = map.Keys.ToList();
+            var keys = new List<int>();
+            map.ForeachKey(key => keys.Add(key));
             Assert.AreEqual(5, keys.Count);
             Assert.AreEqual(1, keys[0]);
             Assert.AreEqual(2, keys[1]);
@@ -130,7 +135,11 @@ namespace Auxiliary.Tests
             var result = map.TryGetValues(1, out var values);
             
             Assert.IsTrue(result);
-            var valueList = values.ToList();
+            var valueList = new List<string>();
+            foreach (var value in values)
+            {
+                valueList.Add(value);
+            }
             Assert.AreEqual(2, valueList.Count);
             Assert.AreEqual("first", valueList[0]);
             Assert.AreEqual("second", valueList[1]);
@@ -144,7 +153,7 @@ namespace Auxiliary.Tests
             var result = map.TryGetValues(1, out var values);
             
             Assert.IsFalse(result);
-            Assert.AreEqual(0, values.Count());
+            Assert.AreEqual(0, values.Length);
         }
 
         [Test]
@@ -155,7 +164,7 @@ namespace Auxiliary.Tests
             map.Add(1, "second");
             map.Add(2, "other");
 
-            var result = map.Remove(1);
+            var result = map.RemoveAll(1);
             
             Assert.IsTrue(result);
             Assert.IsFalse(map.ContainsKey(1));
@@ -176,7 +185,11 @@ namespace Auxiliary.Tests
             Assert.IsTrue(result);
             Assert.IsTrue(map.ContainsKey(1));
             Assert.IsTrue(map.TryGetValues(1, out var values));
-            var valueList = values.ToList();
+            var valueList = new List<string>();
+            foreach (var value in values)
+            {
+                valueList.Add(value);
+            }
             Assert.AreEqual(2, valueList.Count);
             Assert.AreEqual("first", valueList[0]);
             Assert.AreEqual("third", valueList[1]);
@@ -200,7 +213,7 @@ namespace Auxiliary.Tests
         {
             var map = new SortedMultiMap<int, string>();
 
-            var result = map.Remove(1);
+            var result = map.RemoveAll(1);
             
             Assert.IsFalse(result);
         }
@@ -224,7 +237,11 @@ namespace Auxiliary.Tests
             map.AddRange(1, new[] { "first", "second", "third" });
 
             Assert.IsTrue(map.TryGetValues(1, out var values));
-            var valueList = values.ToList();
+            var valueList = new List<string>();
+            foreach (var value in values)
+            {
+                valueList.Add(value);
+            }
             Assert.AreEqual(3, valueList.Count);
             Assert.AreEqual("first", valueList[0]);
             Assert.AreEqual("second", valueList[1]);
@@ -240,7 +257,11 @@ namespace Auxiliary.Tests
             map.AddRange(1, new[] { "new1", "new2" });
 
             Assert.IsTrue(map.TryGetValues(1, out var values));
-            var valueList = values.ToList();
+            var valueList = new List<string>();
+            foreach (var value in values)
+            {
+                valueList.Add(value);
+            }
             Assert.AreEqual(3, valueList.Count);
             Assert.AreEqual("existing", valueList[0]);
             Assert.AreEqual("new1", valueList[1]);
@@ -337,7 +358,8 @@ namespace Auxiliary.Tests
             map.Add(1, "one-a");
             map.Add(1, "one-b");
 
-            var pairs = map.AsPairs().ToList();
+            var pairs = new List<KeyValuePair<int, string>>();
+            map.ForeachPair(pair => pairs.Add(pair));
 
             Assert.AreEqual(3, pairs.Count);
             Assert.AreEqual(1, pairs[0].Key);
@@ -393,7 +415,8 @@ namespace Auxiliary.Tests
             map.Add(3, "three");
             map.Add(2, "two");
 
-            var keys = map.Keys.ToList();
+            var keys = new List<int>();
+            map.ForeachKey(key => keys.Add(key));
 
             Assert.AreEqual(3, keys[0]);
             Assert.AreEqual(2, keys[1]);
@@ -430,7 +453,8 @@ namespace Auxiliary.Tests
                 insertedKeys.Add(key);
             }
 
-            var keys = map.Keys.ToList();
+            var keys = new List<int>();
+            map.ForeachKey(key => keys.Add(key));
             for (int i = 1; i < keys.Count; i++)
             {
                 Assert.LessOrEqual(keys[i - 1], keys[i], "Keys should be in ascending order");
@@ -449,12 +473,13 @@ namespace Auxiliary.Tests
 
             for (int i = 0; i < 100; i += 2)
             {
-                map.Remove(i);
+                map.RemoveAll(i);
             }
 
             Assert.AreEqual(50, map.CountKeys);
             
-            var keys = map.Keys.ToList();
+            var keys = new List<int>();
+            map.ForeachKey(key => keys.Add(key));
             for (int i = 0; i < 50; i++)
             {
                 Assert.AreEqual(i * 2 + 1, keys[i]);
@@ -477,7 +502,7 @@ namespace Auxiliary.Tests
             Assert.AreEqual(5, map.CountKeys);
             Assert.AreEqual(6, map.Count);
 
-            map.Remove(3);
+            map.RemoveAll(3);
             Assert.AreEqual(4, map.CountKeys);
             Assert.IsFalse(map.ContainsKey(3));
 
@@ -489,7 +514,8 @@ namespace Auxiliary.Tests
             Assert.IsFalse(map.ContainsKey(5));
 
             Assert.AreEqual(1, map.First.Key);
-            var keys = map.Keys.ToList();
+            var keys = new List<int>();
+            map.ForeachKey(key => keys.Add(key));
             Assert.AreEqual(3, keys.Count);
             Assert.AreEqual(1, keys[0]);
             Assert.AreEqual(7, keys[1]);
@@ -563,7 +589,7 @@ namespace Auxiliary.Tests
 
             for (int i = 0; i < initialCapacity / 2; i++)
             {
-                map.Remove(i);
+                map.RemoveAll(i);
             }
 
             for (int i = initialCapacity; i < initialCapacity + initialCapacity / 2; i++)
@@ -606,13 +632,13 @@ namespace Auxiliary.Tests
 
             Assert.AreEqual(1, map.First.Key);
 
-            map.Remove(1);
+            map.RemoveAll(1);
             Assert.AreEqual(3, map.First.Key);
 
-            map.Remove(3);
+            map.RemoveAll(3);
             Assert.AreEqual(5, map.First.Key);
 
-            map.Remove(5);
+            map.RemoveAll(5);
             Assert.AreEqual(default(KeyValuePair<int, string>), map.First);
         }
 
@@ -624,10 +650,10 @@ namespace Auxiliary.Tests
             map.Add(3, "three");
             map.Add(5, "five");
 
-            map.Remove(3);
+            map.RemoveAll(3);
             Assert.AreEqual(1, map.First.Key);
 
-            map.Remove(5);
+            map.RemoveAll(5);
             Assert.AreEqual(1, map.First.Key);
         }
 
@@ -659,6 +685,206 @@ namespace Auxiliary.Tests
 
             map.Remove(1, "one-b");
             Assert.AreEqual(3, map.First.Key);
+        }
+
+        [Test]
+        public void TryPopFirst_EmptyMap_ReturnsFalse()
+        {
+            var map = new SortedMultiMap<int, string>();
+
+            var result = map.TryPopFirst(out var key, out var value);
+
+            Assert.IsFalse(result);
+            Assert.AreEqual(default(int), key);
+            Assert.AreEqual(default(string), value);
+            Assert.AreEqual(0, map.Count);
+            Assert.AreEqual(0, map.CountKeys);
+        }
+
+        [Test]
+        public void TryPopFirst_SingleEntry_RemovesEntry()
+        {
+            var map = new SortedMultiMap<int, string>();
+            map.Add(1, "one");
+
+            var result = map.TryPopFirst(out var key, out var value);
+
+            Assert.IsTrue(result);
+            Assert.AreEqual(1, key);
+            Assert.AreEqual("one", value);
+            Assert.AreEqual(0, map.Count);
+            Assert.AreEqual(0, map.CountKeys);
+            Assert.IsFalse(map.ContainsKey(1));
+            Assert.AreEqual(default(KeyValuePair<int, string>), map.First);
+        }
+
+        [Test]
+        public void TryPopFirst_MultipleKeys_PopsMinimumKeyFirst()
+        {
+            var map = new SortedMultiMap<int, string>();
+            map.Add(3, "three");
+            map.Add(1, "one");
+            map.Add(2, "two");
+
+            Assert.IsTrue(map.TryPopFirst(out var key, out var value));
+
+            Assert.AreEqual(1, key);
+            Assert.AreEqual("one", value);
+            Assert.AreEqual(2, map.Count);
+            Assert.AreEqual(2, map.CountKeys);
+            Assert.AreEqual(2, map.First.Key);
+        }
+
+        [Test]
+        public void TryPopFirst_MultipleValuesAtSameKey_PopsFirstValueAndKeepsKey()
+        {
+            var map = new SortedMultiMap<int, string>();
+            map.Add(1, "first");
+            map.Add(1, "second");
+            map.Add(1, "third");
+
+            Assert.IsTrue(map.TryPopFirst(out var key, out var value));
+
+            Assert.AreEqual(1, key);
+            Assert.AreEqual("first", value);
+            Assert.AreEqual(2, map.Count);
+            Assert.AreEqual(1, map.CountKeys);
+            Assert.IsTrue(map.ContainsKey(1));
+            Assert.AreEqual(1, map.First.Key);
+        }
+
+        [Test]
+        public void TryPopFirst_AfterPoppingAllValuesAtMinKey_MovesToNextKey()
+        {
+            var map = new SortedMultiMap<int, string>();
+            map.Add(1, "one-a");
+            map.Add(1, "one-b");
+            map.Add(3, "three");
+
+            Assert.IsTrue(map.TryPopFirst(out _, out var firstValue));
+            Assert.AreEqual("one-a", firstValue);
+            Assert.IsTrue(map.TryPopFirst(out _, out var secondValue));
+            Assert.AreEqual("one-b", secondValue);
+            Assert.IsTrue(map.TryPopFirst(out var key, out var thirdValue));
+
+            Assert.AreEqual(3, key);
+            Assert.AreEqual("three", thirdValue);
+            Assert.AreEqual(0, map.Count);
+            Assert.AreEqual(0, map.CountKeys);
+        }
+
+        [Test]
+        public void FirstValues_ReturnsAllValuesForMinimumKey()
+        {
+            var map = new SortedMultiMap<int, string>();
+            map.Add(2, "priority-2");
+            map.Add(1, "priority-1-a");
+            map.Add(1, "priority-1-b");
+            map.Add(3, "priority-3");
+
+            var firstValues = map.FirstValues;
+
+            Assert.AreEqual(2, firstValues.Length);
+            Assert.AreEqual("priority-1-a", firstValues[0]);
+            Assert.AreEqual("priority-1-b", firstValues[1]);
+        }
+
+        [Test]
+        public void FirstValues_AfterTryPopFirst_ReflectsRemainingValues()
+        {
+            var map = new SortedMultiMap<int, string>();
+            map.Add(1, "first");
+            map.Add(1, "second");
+
+            map.TryPopFirst(out _, out _);
+
+            var firstValues = map.FirstValues;
+
+            Assert.AreEqual(1, firstValues.Length);
+            Assert.AreEqual("second", firstValues[0]);
+        }
+
+        [Test]
+        public void Remove_ByValue_RemovesMatchingValue()
+        {
+            var map = new SortedMultiMap<int, string>();
+            map.Add(2, "two");
+            map.Add(1, "one-a");
+            map.Add(1, "one-b");
+
+            var result = map.Remove("one-b");
+
+            Assert.IsTrue(result);
+            Assert.AreEqual(2, map.Count);
+            Assert.AreEqual(2, map.CountKeys);
+            Assert.IsTrue(map.TryGetValues(1, out var values));
+            Assert.AreEqual(1, values.Length);
+            Assert.AreEqual("one-a", values[0]);
+            Assert.IsFalse(map.Contains(new KeyValuePair<int, string>(1, "one-b")));
+        }
+
+        [Test]
+        public void Remove_ByValue_LastValueForKey_RemovesKey()
+        {
+            var map = new SortedMultiMap<int, string>();
+            map.Add(1, "only");
+            map.Add(2, "two");
+
+            var result = map.Remove("only");
+
+            Assert.IsTrue(result);
+            Assert.IsFalse(map.ContainsKey(1));
+            Assert.AreEqual(1, map.CountKeys);
+            Assert.AreEqual(1, map.Count);
+            Assert.AreEqual(2, map.First.Key);
+        }
+
+        [Test]
+        public void Remove_ByValue_NonExisting_ReturnsFalse()
+        {
+            var map = new SortedMultiMap<int, string>();
+            map.Add(1, "one");
+
+            var result = map.Remove("missing");
+
+            Assert.IsFalse(result);
+            Assert.AreEqual(1, map.Count);
+            Assert.IsTrue(map.ContainsKey(1));
+        }
+
+        [Test]
+        public void Remove_KeyOutValue_PopsLastValueForKey()
+        {
+            var map = new SortedMultiMap<int, string>();
+            map.Add(1, "first");
+            map.Add(1, "second");
+            map.Add(1, "third");
+
+            var result = map.Remove(1, out var value);
+
+            Assert.IsTrue(result);
+            Assert.AreEqual("third", value);
+            Assert.AreEqual(2, map.Count);
+            Assert.IsTrue(map.TryGetValues(1, out var values));
+            Assert.AreEqual(2, values.Length);
+            Assert.AreEqual("first", values[0]);
+            Assert.AreEqual("second", values[1]);
+        }
+
+        [Test]
+        public void ForeachKey_ReturnsUniqueSortedKeys()
+        {
+            var map = new SortedMultiMap<int, string>();
+            map.Add(3, "three-a");
+            map.Add(3, "three-b");
+            map.Add(1, "one");
+
+            var keys = new List<int>();
+            map.ForeachKey(key => keys.Add(key));
+
+            Assert.AreEqual(2, keys.Count);
+            Assert.AreEqual(1, keys[0]);
+            Assert.AreEqual(3, keys[1]);
         }
     }
 }

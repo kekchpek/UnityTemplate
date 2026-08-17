@@ -89,7 +89,7 @@ namespace kekchpek.SaveSystem.SaveTypes
             return GetEnumerator();
         }
 
-        public void Deserialize(ILoadStream loadStream)
+        public void Deserialize(ILoadStream loadStream, int? customCodecVersion)
         {
             if (_dict.Count > 0) {
                 Debug.LogError("Dictionary is not empty");
@@ -107,17 +107,17 @@ namespace kekchpek.SaveSystem.SaveTypes
         protected abstract TKey DeserializeKeyInternal(ILoadStream loadStream);
         protected abstract TValue DeserializeValueInternal(ILoadStream loadStream);
 
-        public void Serialize(ISaveStream saveStream)
+        public void Serialize(ISaveStream saveStream, int? customCodecVersion)
         {
             saveStream.SaveStruct(_dict.Count);
             foreach (var kvp in _dict)
             {
-                SerializeKeyInternal(saveStream, kvp.Key);
-                SerializeValueInternal(saveStream, kvp.Value);
+                SerializeKeyInternal(saveStream, kvp.Key, customCodecVersion);
+                SerializeValueInternal(saveStream, kvp.Value, customCodecVersion);
             }
         }
         
-        protected abstract void SerializeKeyInternal(ISaveStream saveStream, TKey key);
-        protected abstract void SerializeValueInternal(ISaveStream saveStream, TValue value);
+        protected abstract void SerializeKeyInternal(ISaveStream saveStream, TKey key, int? customCodecVersion);
+        protected abstract void SerializeValueInternal(ISaveStream saveStream, TValue value, int? customCodecVersion);
     }
 }

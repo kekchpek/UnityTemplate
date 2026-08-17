@@ -16,9 +16,6 @@ namespace kekchpek.MVVM.Models.GameResources.Components
         [SerializeField]
         private Color _unavailableText;
 
-        [SerializeField]
-        private string _format = "0.##";
-
         private IPrice _price;
 
         [SerializeField]
@@ -38,40 +35,48 @@ namespace kekchpek.MVVM.Models.GameResources.Components
 
         private void Awake()
         {
-            _transform = transform;
+            InitializeTransform();
         }
 
         public void SetupPrice(IPrice price)
         {
+            InitializeTransform();
             ReleasePrice();
-            if (price != null)
-            {
-                _price = price;
-                var i = 0;
-                foreach (var (id, amount) in _price)
-                {
-                    ResourceComponent label;
-                    if (i < _resourcesLabels.Count)
-                    {
-                        label = _resourcesLabels[i];
-                    }
-                    else
-                    {
-                        label = Instantiate(_resourceLabelPrefab, _transform);
-                        _resourcesLabels.Add(label);
-                    }
-                    label.gameObject.SetActive(true);
-                    label.SetAmount(amount.ToString(_format));
-                    label.SetIcon(_assetsModel.LoadAsset<Sprite>(GameResourcesStrings.GetIconPath(id)));
-                    i++;
-                }
+            if (price == null)
+                return;
 
-                for (; i < _resourcesLabels.Count; i++)
+            _price = price;
+            var i = 0;
+            foreach ((ResourceId resourceId, string amount) in _price.GetTextRepresentation())
+            {
+                ResourceComponent label;
+                if (i < _resourcesLabels.Count)
                 {
-                    _resourcesLabels[i].gameObject.SetActive(false);
+                    label = _resourcesLabels[i];
                 }
-                _price.Affordable.Bind(UpdateAffordability);
+                else
+                {
+                    label = Instantiate(_resourceLabelPrefab, _transform);
+                    _resourcesLabels.Add(label);
+                }
+                label.gameObject.SetActive(true);
+                label.SetAmount(amount);
+                label.SetIcon(_assetsModel.GetCachedAsset<Sprite>(GameResourcesStrings.GetIconPath(resourceId)));
+                i++;
             }
+
+            for (; i < _resourcesLabels.Count; i++)
+            {
+                _resourcesLabels[i].gameObject.SetActive(false);
+            }
+            _price.Affordable.Bind(UpdateAffordability);
+        }
+
+        private void InitializeTransform() 
+        {
+            if (_transform)
+                return;
+            _transform = transform;
         }
 
         private void ReleasePrice()

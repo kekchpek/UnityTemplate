@@ -4,7 +4,6 @@ using kekchpek.SaveSystem.Codec;
 using kekchpek.SaveSystem.CustomSerialization;
 using kekchpek.SaveSystem.Utils;
 using UnityEngine;
-using UnityEngine.Pool;
 
 namespace kekchpek.SaveSystem.Data
 {
@@ -99,7 +98,7 @@ namespace kekchpek.SaveSystem.Data
                         return defaultValueFactory == null ? default : defaultValueFactory();
                     }
                 }
-                var obj = customCodec.Deserialize(value);
+                var obj = customCodec.Deserialize(value, value.CustomCodecVersion ?? null);
                 if (removeAfterDeserialization)
                 {
                     value.Dispose();

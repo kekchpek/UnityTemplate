@@ -5,14 +5,14 @@ namespace kekchpek.SaveSystem.SaveTypes
     public class SavableList<T> : BaseSavableList<T>
         where T : ISaveObject, new()
     {
-        protected override T DeserializeInternal(ILoadStream loadStream)
+        protected override T DeserializeInternal(ILoadStream loadStream, int? customCodecVersion)
         {
             return loadStream.LoadSavable<T>();
         }
 
-        protected override void SerializeInternal(ISaveStream saveStream, T element)
+        protected override void SerializeInternal(ISaveStream saveStream, T element, int? customCodecVersion)
         {
-            element.Serialize(saveStream);
+            element.Serialize(saveStream, customCodecVersion);
         }
     }
 }

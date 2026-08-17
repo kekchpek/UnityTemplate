@@ -2,8 +2,9 @@ using GameResources.Domain;
 
 namespace kekchpek.MVVM.Models.GameResources.Container
 {
-    public interface IMutableResourcesContainer : IResourcesContainer
+    public interface IMutableResourcesContainer<T> : IResourcesContainer<T>
     {
-        void SetResource(ResourceId resourceId, float value);
+        void RegisterResource(ResourceId resourceId);
+        void SetResource(ResourceId resourceId, T value);
     }
 }

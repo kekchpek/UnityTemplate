@@ -13,15 +13,25 @@ A Python console application for discovering and communicating with GameMaster s
 ## Installation
 
 1. Make sure you have Python 3.6+ installed
-2. Install dependencies:
+2. Run the launcher script (creates a local `.venv` and installs dependencies automatically):
    ```bash
-   pip install -r requirements.txt
+   ./run_client.sh        # macOS / Linux
+   run_client.bat         # Windows
    ```
 
 ## Usage
 
-Run the client application:
+Run the client via the launcher:
 ```bash
+./run_client.sh        # macOS / Linux
+run_client.bat         # Windows
+```
+
+Or manually with the virtual environment:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
 python gamemaster_client.py
 ```
 

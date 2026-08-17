@@ -32,6 +32,8 @@ namespace AuxiliaryComponents
 
         private void Update()
         {
+            if (!enabled)
+                return;
             if (_mode == Mode.Fit)
                 Fit();
         }

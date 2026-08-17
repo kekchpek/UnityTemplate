@@ -12,9 +12,6 @@ namespace kekchpek.MVVM.Models.GameResources.Components
 
         [SerializeField]
         private ResourceComponent _resource;
-
-        [SerializeField]
-        private string _format = "0.##";
         
         [SerializeField]
         private Color _affordableColor = Color.white;
@@ -37,15 +34,15 @@ namespace kekchpek.MVVM.Models.GameResources.Components
             {
                 _currentPrice.Affordable.Unbind(UpdateAffordable);
             }
-            var first = price.FirstOrDefault();
+            var first = price.GetTextRepresentation().FirstOrDefault();
             if (first == default)
             {
                 Debug.LogError("No price!");
                 return;
             }
             _currentPrice = price;
-            _resource.SetAmount(first.amount.ToString(_format));
-            _resource.SetIcon(_assetsModel.LoadAsset<Sprite>(GameResourcesStrings.GetIconPath(first.resourceId)));
+            _resource.SetAmount(first.amount);
+            _resource.SetIcon(_assetsModel.GetCachedAsset<Sprite>(GameResourcesStrings.GetIconPath(first.resourceId)));
             _currentPrice.Affordable.Bind(UpdateAffordable);
         }
 

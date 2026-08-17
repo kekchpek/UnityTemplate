@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using kekchpek.GameSaves.Data;
 using AsyncReactAwait.Bindable;
 using Cysharp.Threading.Tasks;
@@ -12,11 +11,18 @@ namespace kekchpek.GameSaves
 {
     public class NoSaveManager : IGameSaveManager, IGameSaveController
     {
+        private readonly IMutableFactory _mutableFactory;
+
+        public NoSaveManager(IMutableFactory mutableFactory = null)
+        {
+            _mutableFactory = mutableFactory ?? DefaultMutableFactory.Instance;
+        }
+
         public string CurrentSaveId => "no_save";
 
-        public ISaveDataProvider GameDataProvider => new EmptySaveDataProvider();
+        public IMultifileSaveDataProvider GameDataProvider => new EmptySaveDataProvider(_mutableFactory);
 
-        public ISaveDataProvider SettingsDataProvider => new EmptySaveDataProvider();
+        public ISaveDataProvider SettingsDataProvider => new EmptySaveDataProvider(_mutableFactory);
 
         public IBindable<bool> IsInitialized { get; } = new Mutable<bool>(true);
 
@@ -39,32 +45,9 @@ namespace kekchpek.GameSaves
         {
         }
 
-        public IMutable<T> DeserializeAndCaptureStructValue<T>(string valueKey, T defaultValue = default, bool isMetaValue = false) where T : unmanaged
-        {
-            return new Mutable<T>(defaultValue);
-        }
-
-        public T DeserializeAndCaptureSavableObject<T>(string valueKey, System.Func<T> factoryMethod = null, bool isMetaValue = false) where T : ISaveObject, new()
-        {
-            if (factoryMethod != null)
-            {
-                return factoryMethod();
-            }
-            return new T();
-        }
-
-        public IMutable<T> DeserializeAndCaptureCustomValue<T>(string valueKey, System.Func<T> defaultValueFactory = null, bool isMetaValue = false)
-        {
-            if (defaultValueFactory != null)
-            {
-                return new Mutable<T>(defaultValueFactory());
-            }
-            return new Mutable<T>(default);
-        }
-
         public ISaveDataProvider GetExclusiveDataProvider(string dataName)
         {
-            return new EmptySaveDataProvider();
+            return new EmptySaveDataProvider(_mutableFactory);
         }
 
         public void RefreshSelectedProfile()
@@ -72,7 +55,12 @@ namespace kekchpek.GameSaves
             // Do nothing
         }
 
-        public void SaveExplicitly()
+        public byte[] SaveExplicitly()
+        {
+            return null;
+        }
+
+        public void ToggleAutosave(bool enabled, long autosaveIntervalMs)
         {
             // Do nothing
         }
@@ -87,12 +75,12 @@ namespace kekchpek.GameSaves
             // Do nothing
         }
 
-        public UniTask<IReadOnlyList<SaveData>> GetSaves()
+        public UniTask<IReadOnlyList<T>> GetSaves<T>() where T : BaseSaveData, new()
         {
-            return UniTask.FromResult<IReadOnlyList<SaveData>>(System.Array.Empty<SaveData>());
+            return UniTask.FromResult<IReadOnlyList<T>>(System.Array.Empty<T>());
         }
 
-        public void ToggleAutosave(bool enabled, long autosaveIntervalMs)
+        public void UnregisterCustomCodec<T>(ICustomCodec<T> codec)
         {
             // Do nothing
         }

@@ -2,9 +2,9 @@ using GameResources.Domain;
 
 namespace kekchpek.MVVM.Models.GameResources.Prices
 {
-    public interface IPriceBuilder
+    public interface IPriceBuilder<T>
     {
-        IPriceBuilder Add(ResourceId resId, float amount);
-        IPrice Build();
+        IPriceBuilder<T> Add(ResourceId resId, T amount);
+        IPrice<T> Build();
     }
 }

@@ -1,6 +1,9 @@
+using System;
+using AudioSystem.Service;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Zenject;
 
 namespace kekchpek.AuxiliaryComponents.SimpleButton
 {
@@ -17,6 +20,12 @@ namespace kekchpek.AuxiliaryComponents.SimpleButton
         private Button.ButtonClickedEvent _onClick = new Button.ButtonClickedEvent();
 
         [SerializeField]
+        private Button.ButtonClickedEvent _onNonIntecactableClick = new Button.ButtonClickedEvent();
+
+        [SerializeField]
+        private string _sfxKey;
+
+        [SerializeField]
         private bool _useColorTransition = true;
 
         [SerializeField]
@@ -24,6 +33,12 @@ namespace kekchpek.AuxiliaryComponents.SimpleButton
 
         [SerializeField]
         private Color _baseColor = Color.white;
+
+        [SerializeField]
+        private KeyCode _keyCode = KeyCode.None;
+
+        [SerializeField]
+        private float _keyDownStateTime = 0.1f;
 
         [Header("State colors")]
         [SerializeField]
@@ -75,10 +90,27 @@ namespace kekchpek.AuxiliaryComponents.SimpleButton
         [SerializeField]
         private Vector3 _pressedDisabledScale = Vector3.one;
 
+        private IAudioService _audioService;
+
+        private bool _isActivatedByKey;
+
         private bool _isPointerDown;
         private bool _isHovered;
 
-        public bool interactable
+        private float _keyDownStateCurrentTime;
+
+        private bool _isSoundActive = true;
+
+        public string SfxKey
+        {
+            get => _sfxKey;
+            set
+            {
+                _sfxKey = value;
+            }
+        }
+
+        public bool Interactable
         {
             get => _interactable;
             set
@@ -90,12 +122,59 @@ namespace kekchpek.AuxiliaryComponents.SimpleButton
             }
         }
 
+        public bool SoundActive
+        {
+            get => _isSoundActive;
+            set
+            {
+                _isSoundActive = value;
+            }
+        }
+
+        public KeyCode KeyCode
+        {
+            get => _keyCode;
+            set
+            {
+                _keyCode = value;
+            }
+        }
+
         public Button.ButtonClickedEvent onClick => _onClick;
+
+        /// <summary>
+        /// Raised instead of <see cref="onClick"/> when the button is clicked while not interactable,
+        /// so callers can explain why the action is unavailable.
+        /// </summary>
+        public Button.ButtonClickedEvent OnNonIntecactableClick => _onNonIntecactableClick;
+
+        [Inject]
+        public void Construct(IAudioService audioService)
+        {
+            _audioService = audioService;
+        }
 
         private void Awake()
         {
             if (_targetTransform == null)
                 _targetTransform = transform;
+        }
+
+        private void Update()
+        {
+            if (_isActivatedByKey)
+            {
+                _keyDownStateCurrentTime -= Time.deltaTime;
+                if (_keyDownStateCurrentTime <= 0)
+                {
+                    _isActivatedByKey = false;
+                    UpdateVisualState();
+                }
+            }
+            if (Input.GetKeyDown(_keyCode))
+            {
+                Click();
+            }
         }
 
         private void OnEnable()
@@ -114,9 +193,27 @@ namespace kekchpek.AuxiliaryComponents.SimpleButton
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (!_interactable)
+            if (eventData != null && eventData.button != PointerEventData.InputButton.Left)
                 return;
+            ClickInternal();
+        }
 
+        public void Click() 
+        {
+            _isActivatedByKey = true;
+            _keyDownStateCurrentTime = _keyDownStateTime;
+            ClickInternal();
+            UpdateVisualState();
+        }
+
+        private void ClickInternal() 
+        {
+            NotifyPlaySfx();
+            if (!_interactable)
+            {
+                _onNonIntecactableClick?.Invoke();
+                return;
+            }
             _onClick?.Invoke();
         }
 
@@ -144,6 +241,14 @@ namespace kekchpek.AuxiliaryComponents.SimpleButton
             UpdateVisualState();
         }
 
+        private void NotifyPlaySfx()
+        {
+            if (!string.IsNullOrEmpty(_sfxKey) && _isSoundActive)
+            {
+                _audioService.PlaySFX(_sfxKey);
+            }
+        }
+
         private void UpdateVisualState()
         {
             if (_useColorTransition && _targetGraphic != null)
@@ -163,11 +268,11 @@ namespace kekchpek.AuxiliaryComponents.SimpleButton
         {
             if (_interactable)
             {
-                if (_isPointerDown) return _pressedColor;
+                if (_isPointerDown || _isActivatedByKey) return _pressedColor;
                 if (_isHovered) return _hoveredColor;
                 return _normalColor;
             }
-            if (_isPointerDown) return _pressedDisabledColor;
+            if (_isPointerDown || _isActivatedByKey) return _pressedDisabledColor;
             if (_isHovered) return _hoveredDisabledColor;
             return _normalDisabledColor;
         }
@@ -176,11 +281,11 @@ namespace kekchpek.AuxiliaryComponents.SimpleButton
         {
             if (_interactable)
             {
-                if (_isPointerDown) return _pressedScale;
+                if (_isPointerDown || _isActivatedByKey) return _pressedScale;
                 if (_isHovered) return _hoveredScale;
                 return _normalScale;
             }
-            if (_isPointerDown) return _pressedDisabledScale;
+            if (_isPointerDown || _isActivatedByKey) return _pressedDisabledScale;
             if (_isHovered) return _hoveredDisabledScale;
             return _normalDisabledScale;
         }

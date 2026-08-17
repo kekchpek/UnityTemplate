@@ -1,0 +1,21 @@
+{
+    "name": "SkillsSystem",
+    "rootNamespace": "SkillsSystem",
+    "references": [
+        "Localization",
+        "SaveSystem",
+        "UniTask",
+        "kekchpek.Auxiliary",
+        "GameResources",
+        "Zenject"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -13,6 +13,9 @@ namespace kekchpek.SaveSystem.CustomSerialization
         private ILoadCodecAdapter _adapter;
         private Stream _stream;
         private NativeList _data;
+        private int? _customCodecVersion;
+
+        public int? CustomCodecVersion => _customCodecVersion;
 
         NativeList ILoadStream.Data => _data;
         Stream ILoadStream.Stream => _stream;
@@ -24,10 +27,11 @@ namespace kekchpek.SaveSystem.CustomSerialization
         internal static ILoadStream Get(
             Stream stream,
             NativeList data,
-            ILoadCodecAdapter loadCodecAdapter)
+            ILoadCodecAdapter loadCodecAdapter,
+            int? customCodecVersion)
         {
             var s = Pool.Count == 0 ? new LoadStream() : Pool.Pop();
-            s.Initialize(stream, data, loadCodecAdapter);
+            s.Initialize(stream, data, loadCodecAdapter, customCodecVersion);
             s._isActive = true;
             return s;
         }
@@ -35,11 +39,14 @@ namespace kekchpek.SaveSystem.CustomSerialization
         private void Initialize(
             Stream stream,
             NativeList data,
-            ILoadCodecAdapter loadCodecAdapter)
+            ILoadCodecAdapter loadCodecAdapter,
+            int? customCodecVersion
+            )
         {
             _stream = stream;
             _data = data;
             _adapter = loadCodecAdapter;
+            _customCodecVersion = customCodecVersion;
         }
 
         public static void Release(SaveStream s)
@@ -52,11 +59,11 @@ namespace kekchpek.SaveSystem.CustomSerialization
         public T LoadSavable<T>() where T : ISaveObject, new()
         {
             var val = new T();
-            val.Deserialize(this);
+            val.Deserialize(this, _customCodecVersion);
             return val;
         }
         
-        public T LoadCustom<T>() => _adapter.ReadCustom<T>(_stream);
+        public T LoadCustom<T>() => _adapter.ReadCustom<T>(_stream, _customCodecVersion);
 
         public void Dispose()
         {

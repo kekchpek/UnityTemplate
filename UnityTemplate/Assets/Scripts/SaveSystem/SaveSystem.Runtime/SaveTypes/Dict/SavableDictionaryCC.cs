@@ -14,14 +14,14 @@ namespace kekchpek.SaveSystem.SaveTypes
             return loadStream.LoadCustom<TValue>();
         }
 
-        protected override void SerializeKeyInternal(ISaveStream saveStream, TKey key)
+        protected override void SerializeKeyInternal(ISaveStream saveStream, TKey key, int? customCodecVersion)
         {
-            saveStream.SaveCustom(key);
+            saveStream.SaveCustom(key, customCodecVersion);
         }
 
-        protected override void SerializeValueInternal(ISaveStream saveStream, TValue value)
+        protected override void SerializeValueInternal(ISaveStream saveStream, TValue value, int? customCodecVersion)
         {
-            saveStream.SaveCustom(value);
+            saveStream.SaveCustom(value, customCodecVersion);
         }
     }
 }

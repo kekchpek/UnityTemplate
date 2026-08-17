@@ -1,13 +1,19 @@
+#if !(UNITY_STANDALONE_WIN || UNITY_STANDALONE_LINUX || UNITY_STANDALONE_OSX || STEAMWORKS_WIN || STEAMWORKS_LIN_OSX)
+#define DISABLESTEAMWORKS
+#endif
+
 using System;
-using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using kekchpek.Achievements;
 using kekchpek.SteamApi.Core;
-using Steamworks;
-using UnityEngine;
 
 namespace kekchpek.SteamApi.Achievements
 {
+#if !DISABLESTEAMWORKS
+    using System.Collections.Generic;
+    using Cysharp.Threading.Tasks;
+    using Steamworks;
+    using UnityEngine;
+
     public class SteamAchievementsService : IAchievementsService, ISteamAchivementsInitializer, IDisposable
     {
         private readonly ISteamInitService _steamInitService;
@@ -29,7 +35,6 @@ namespace kekchpek.SteamApi.Achievements
         public void Initialize()
         {
             _steamInitService.IsInitialized.Bind(OnSteamInitialized);
-            _achivementsAggregator.AddAchivementsService(this);
         }
 
         private void OnSteamInitialized(bool isInitialized)
@@ -74,13 +79,17 @@ namespace kekchpek.SteamApi.Achievements
                 RequestStats();
                 return;
             }
-
+            var statsReceivedFirstTime = !_statsReceived;
             _statsReceived = true;
             Debug.Log("[Steam Achievements] Stats received successfully.");
 
             foreach (var achievement in GetAllAchievements())
             {
                 Debug.Log($"[Steam Achievements] Achievement: {achievement.id} - {achievement.name} - {achievement.description} - {achievement.isHidden}");
+            }
+            if (statsReceivedFirstTime)
+            {
+                _achivementsAggregator.AddAchivementsService(this);
             }
         }
 
@@ -98,7 +107,7 @@ namespace kekchpek.SteamApi.Achievements
                 string displayName = SteamUserStats.GetAchievementDisplayAttribute(achievementId, "name");
                 string description = SteamUserStats.GetAchievementDisplayAttribute(achievementId, "desc");
                 bool isHidden = SteamUserStats.GetAchievementDisplayAttribute(achievementId, "hidden") == "1";
-                
+
                 yield return (achievementId, displayName, description, isHidden);
             }
         }
@@ -177,4 +186,35 @@ namespace kekchpek.SteamApi.Achievements
             _userStatsReceivedCallResult.Dispose();
         }
     }
+#else
+    public class SteamAchievementsService : IAchievementsService, ISteamAchivementsInitializer, IDisposable
+    {
+        public SteamAchievementsService(
+            ISteamInitService steamInitService,
+            IAchievementsAggregator achivementsAggregator)
+        {
+        }
+
+        public void Initialize()
+        {
+        }
+
+        public void UnlockAchievement(string achievementId)
+        {
+        }
+
+        public void ClearAchievement(string achievementId)
+        {
+        }
+
+        public bool IsAchievementUnlocked(string achievementId)
+        {
+            return false;
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+#endif
 }

@@ -9,7 +9,9 @@
         "Localization",
         "kekchpek.SteamApi",
         "Achievements",
-        "kekchpek.Auxiliary"
+        "kekchpek.Auxiliary",
+        "Diagnostics",
+        "GameResources"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

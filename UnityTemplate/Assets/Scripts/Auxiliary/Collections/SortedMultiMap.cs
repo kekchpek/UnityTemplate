@@ -6,7 +6,7 @@ using NodeIndex = System.Int32;
 
 namespace kekchpek.Auxiliary.Collections
 {
-    public class SortedMultiMap<TKey, TValue> : IDictionary<TKey, TValue>
+    public class SortedMultiMap<TKey, TValue>
     {
 
         public delegate ref Node GetNodeDelegate(NodeIndex nodeIndex);
@@ -20,7 +20,7 @@ namespace kekchpek.Auxiliary.Collections
         public struct Node
         {
             public TKey Key;
-            public List<TValue> Values;
+            public HyperList<TValue> Values;
             public NodeIndex Parent;
             public NodeIndex Left;
             public NodeIndex Right;
@@ -102,7 +102,7 @@ namespace kekchpek.Auxiliary.Collections
         private Node[] _nodesPool = new Node[NodesPoolInitialCapacity];
         private readonly Stack<int> _freeNodes = new Stack<NodeIndex>(NodesPoolInitialCapacity);
 
-        private readonly AdvancedListPool<TValue> _listPool = new(NodesPoolInitialCapacity, 3);
+        private readonly AdvancedHyperListPool<TValue> _listPool = new(NodesPoolInitialCapacity, 3);
         private readonly IComparer<TKey> _comparer;
         private NodeIndex _root = -1;
         private NodeIndex _firstNodeIndex = -1;
@@ -120,6 +120,27 @@ namespace kekchpek.Auxiliary.Collections
                 ref var node = ref GetNode(_firstNodeIndex);
                 return new KeyValuePair<TKey, TValue>(node.Key, node.Values[0]);
             }
+        }
+
+        public ReadOnlySpan<TValue> FirstValues {
+            get 
+            {
+                if (_firstNodeIndex == -1)
+                {
+                    return default;
+                }
+                return GetNode(_firstNodeIndex).Values.GetReadOnlySpan();
+            }
+        }
+
+        public bool TryGetFirstKey(out TKey key) {
+            if (_firstNodeIndex == -1)
+            {
+                key = default;
+                return false;
+            }
+            key = GetNode(_firstNodeIndex).Key;
+            return true;
         }
 
         public int Capacity => _nodesPool.Length;
@@ -152,7 +173,7 @@ namespace kekchpek.Auxiliary.Collections
             _totalCount++;
         }
 
-        public void AddRange(TKey key, IEnumerable<TValue> values)
+        public void AddRange(TKey key, ReadOnlySpan<TValue> values)
         {
             var nodeIndex = FindNode(key);
             if (nodeIndex != -1)
@@ -178,12 +199,12 @@ namespace kekchpek.Auxiliary.Collections
             }
         }
 
-        public bool TryGetValues(TKey key, out IEnumerable<TValue> values)
+        public bool TryGetValues(TKey key, out ReadOnlySpan<TValue> values)
         {
             var nodeIndex = FindNode(key);
             if (nodeIndex != -1)
             {
-                values = GetNode(nodeIndex).Values;
+                values = GetNode(nodeIndex).Values.GetReadOnlySpan();
                 return true;
             }
             values = Array.Empty<TValue>();
@@ -203,6 +224,50 @@ namespace kekchpek.Auxiliary.Collections
             list.RemoveAt(list.Count - 1);
             _totalCount--;
             UpdateNodeState(key, nodeIndex, list);
+            return true;
+        }
+
+        public bool Remove(TValue value)
+        {
+            var removed = false;
+            TraverseInOrder(nodeIndex =>
+            {
+                if (removed)
+                {
+                    return;
+                }
+
+                ref var node = ref GetNode(nodeIndex);
+                var index = node.Values.IndexOf(value);
+                if (index < 0)
+                {
+                    return;
+                }
+
+                var key = node.Key;
+                node.Values.SwapAndRemoveAt(index);
+                _totalCount--;
+                UpdateNodeState(key, nodeIndex, node.Values);
+                removed = true;
+            });
+            return removed;
+        }
+
+        public bool TryPopFirst(out TKey key, out TValue value)
+        {
+            if (_firstNodeIndex == -1)
+            {
+                key = default;
+                value = default;
+                return false;
+            }
+
+            ref var node = ref GetNode(_firstNodeIndex);
+            key = node.Key;
+            value = node.Values[0];
+            node.Values.SwapAndRemoveAt(0);
+            _totalCount--;
+            UpdateNodeState(key, _firstNodeIndex, node.Values);
             return true;
         }
 
@@ -227,7 +292,7 @@ namespace kekchpek.Auxiliary.Collections
             return true;
         }
 
-        private void UpdateNodeState(TKey key, NodeIndex nodeIndex, List<TValue> list) {
+        private void UpdateNodeState(TKey key, NodeIndex nodeIndex, HyperList<TValue> list) {
             if (list.Count == 0)
             {
                 bool wasFirst = _firstNodeIndex != -1 && _comparer.Compare(key, GetNode(_firstNodeIndex).Key) == 0;
@@ -241,7 +306,7 @@ namespace kekchpek.Auxiliary.Collections
             }
         }
 
-        private static int FindValueIndex(List<TValue> list, TValue value)
+        private static int FindValueIndex(HyperList<TValue> list, TValue value)
         {
             var comparer = EqualityComparer<TValue>.Default;
             for (int i = 0; i < list.Count; i++)
@@ -254,15 +319,15 @@ namespace kekchpek.Auxiliary.Collections
             return -1;
         }
 
-        public IEnumerable<KeyValuePair<TKey, TValue>> AsPairs()
+        public void ForeachPair(Action<KeyValuePair<TKey, TValue>> callback)
         {
-            foreach (var node in TraverseInOrder())
+            TraverseInOrder(node =>
             {
-                foreach (var value in GetNode(node).Values)
+                foreach (var value in GetNode(node).Values.GetReadOnlySpan())
                 {
-                    yield return new KeyValuePair<TKey, TValue>(GetNode(node).Key, value);
+                    callback(new KeyValuePair<TKey, TValue>(GetNode(node).Key, value));
                 }
-            }
+            });
         }
 
         public bool ContainsKey(TKey key)
@@ -270,7 +335,7 @@ namespace kekchpek.Auxiliary.Collections
             return FindNode(key) != -1;
         }
 
-        public bool Remove(TKey key)
+        public bool RemoveAll(TKey key)
         {
             var nodeIndex = FindNode(key);
             if (nodeIndex == -1)
@@ -365,13 +430,10 @@ namespace kekchpek.Auxiliary.Collections
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            foreach (var node in TraverseInOrder())
+            TraverseInOrder(node =>
             {
-                foreach (var value in GetNode(node).Values)
-                {
-                    array[arrayIndex++] = new KeyValuePair<TKey, TValue>(GetNode(node).Key, value);
-                }
-            }
+                array[arrayIndex++] = new KeyValuePair<TKey, TValue>(GetNode(node).Key, GetNode(node).Values[0]);
+            });
         }
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
@@ -379,30 +441,19 @@ namespace kekchpek.Auxiliary.Collections
             return Remove(item.Key, item.Value);
         }
 
-        IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
         public Enumerator GetEnumerator()
         {
             return new Enumerator(GetNode, this);
         }
 
-        public IReadOnlyCollection<TKey> Keys {
-            get {
-                var list = new List<TKey>();
-                foreach(var kvp in this) {
-                    list.Add(kvp.Key);
-                }
-                return list;
-            }
+        public void ForeachKey(Action<TKey> callback)
+        {
+            TraverseInOrder(node =>
+            {
+                callback(GetNode(node).Key);
+            });
         }
+
         public int CountKeys => _keyCount;
 
         public ICollection<TValue> Values {
@@ -418,16 +469,6 @@ namespace kekchpek.Auxiliary.Collections
         public int Count => _totalCount;
 
         public bool IsReadOnly => false;
-
-        ICollection<TKey> IDictionary<TKey, TValue>.Keys {
-            get {
-                var list = new List<TKey>();
-                foreach(var kvp in this) {
-                    list.Add(kvp.Key);
-                }
-                return list;
-            }
-        }
 
         public TValue this[TKey key]
         {
@@ -480,8 +521,8 @@ namespace kekchpek.Auxiliary.Collections
             }
             return -1;
         }
-
-        private void InsertNode(TKey key, List<TValue> values)
+    
+        private void InsertNode(TKey key, HyperList<TValue> values)
         {
             var newNodeIndex = GetFreeNodeIndex();
             ref var newNode = ref GetNode(newNodeIndex);
@@ -845,17 +886,17 @@ namespace kekchpek.Auxiliary.Collections
             return parent;
         }
 
-        private IEnumerable<NodeIndex> TraverseInOrder()
+        private void TraverseInOrder(Action<NodeIndex> callback)
         {
             if (_root == -1)
             {
-                yield break;
+                return;
             }
 
             var current = GetMinimumNode(_root);
             while (current != -1)
             {
-                yield return current;
+                callback(current);
                 current = GetSuccessor(current);
             }
         }

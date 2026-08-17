@@ -5,7 +5,7 @@ using AsyncReactAwait.Bindable;
 
 namespace kekchpek.MVVM.Models.GameResources
 {
-    public class ResourcesModel : ResourcesContainer, IResourcesMutableModel
+    public class ResourcesModel : ResourcesContainer<float>, IResourcesMutableModel
     {
         
         private readonly IGameSaveManager _gameSaveManager;

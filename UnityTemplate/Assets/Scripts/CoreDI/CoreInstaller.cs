@@ -1,5 +1,6 @@
 using System;
 using AssetsSystem;
+using BulkEvents;
 using GMConsole;
 using kekchpek.Achievements;
 using kekchpek.Auxiliary.Application;
@@ -17,7 +18,7 @@ namespace DI.Core
         
         public override void InstallBindings()
         {
-            Container.Bind(new Type[] { typeof(IConfigsProvider), typeof(IConfigsLoader) }).To<ConfigsManager>().AsSingle();
+            Container.Install<ConfigsManagerInstaller>();
             Container.Bind<IProjectStartupService>().To<ProjectStartupService>().AsSingle();
             Container.Install<GameSavesInstaller>();
             Container.Bind(new Type[] {
@@ -33,6 +34,7 @@ namespace DI.Core
             Container.Bind<ILocalizationMutableModel>().To<LocalizationModel>().AsSingle();
             Container.Bind<ILocalizationModel>().To<ILocalizationMutableModel>().FromResolve();
             Container.Bind<ILocalizationService>().To<LocalizationService>().AsSingle();
+            Container.Bind<IBulkEventsService>().To<BulkEventsService>().AsSingle();
         }
         
     }

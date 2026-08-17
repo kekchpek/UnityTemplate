@@ -69,7 +69,7 @@ namespace kekchpek.SaveSystem.SaveTypes
             set => _data[index] = value;
         }
 
-        public void Deserialize(ILoadStream loadStream)
+        public void Deserialize(ILoadStream loadStream, int? customCodecVersion)
         {
             _data.Clear();
             var count = loadStream.LoadStruct<int>();
@@ -79,22 +79,22 @@ namespace kekchpek.SaveSystem.SaveTypes
             }
             for (var i = 0; i < count; i++)
             {
-                _data.Add(DeserializeInternal(loadStream));
+                _data.Add(DeserializeInternal(loadStream, customCodecVersion));
             }
         }
 
-        protected abstract T DeserializeInternal(ILoadStream loadStream);
+        protected abstract T DeserializeInternal(ILoadStream loadStream, int? customCodecVersion);
 
-        public void Serialize(ISaveStream saveStream)
+        public void Serialize(ISaveStream saveStream, int? customCodecVersion)
         {
             saveStream.SaveStruct(_data.Count);
             foreach (var element in _data)
             {
-                SerializeInternal(saveStream, element);
+                SerializeInternal(saveStream, element, customCodecVersion);
             }
         }
         
-        protected abstract void SerializeInternal(ISaveStream saveStream, T element);
+        protected abstract void SerializeInternal(ISaveStream saveStream, T element, int? customCodecVersion);
 
     }
 }

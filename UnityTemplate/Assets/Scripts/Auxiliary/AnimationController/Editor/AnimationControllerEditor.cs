@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -22,12 +23,83 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
         {
             serializedObject.Update();
 
+            DrawRuntimeDebugInfo();
             int previousIndent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = previousIndent + 1;
             DrawSequences();
             EditorGUI.indentLevel = previousIndent;
 
             serializedObject.ApplyModifiedProperties();
+        }
+
+        private void DrawRuntimeDebugInfo()
+        {
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_unscaledTime"));
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+
+            if (target is not AnimationController animationController)
+            {
+                return;
+            }
+
+            var activeSequences = animationController.GetActiveSequencesDebugInfo();
+            EditorGUILayout.LabelField("Runtime Debug", EditorStyles.boldLabel);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                if (activeSequences.Count == 0)
+                {
+                    EditorGUILayout.LabelField("No active sequences.");
+                }
+                else
+                {
+                    DrawActiveSequencesList(activeSequences, true);
+                    EditorGUILayout.Space(4f);
+                    DrawActiveSequencesList(activeSequences, false);
+                }
+            }
+
+            EditorGUILayout.Space(6f);
+            Repaint();
+        }
+
+        private static void DrawActiveSequencesList(IReadOnlyList<AnimationController.ActiveSequenceDebugInfo> activeSequences, bool looped)
+        {
+            string title = looped ? "Looped" : "Non-looped";
+            EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+
+            bool hasItems = false;
+            for (int i = 0; i < activeSequences.Count; i++)
+            {
+                var info = activeSequences[i];
+                if (info.IsLooped != looped)
+                {
+                    continue;
+                }
+
+                hasItems = true;
+                DrawSequenceDebugInfo(info);
+            }
+
+            if (!hasItems)
+            {
+                EditorGUILayout.LabelField("None");
+            }
+        }
+
+        private static void DrawSequenceDebugInfo(AnimationController.ActiveSequenceDebugInfo info)
+        {
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField(info.SequenceName, EditorStyles.boldLabel);
+                float progress = Mathf.Clamp01(info.Progress);
+                Rect rect = GUILayoutUtility.GetRect(18f, 18f, "TextField");
+                EditorGUI.ProgressBar(rect, progress, $"{progress * 100f:0.0}%");
+                string durationText = info.Duration > 0f ? $"{info.Duration:0.00}s" : "unknown";
+                EditorGUILayout.LabelField($"Time: {info.ElapsedTime:0.00}s / {durationText}");
+            }
         }
 
         private void DrawSequences()
@@ -231,6 +303,8 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
                     return new SpineClearTrackAnimationTypeData();
                 case AnimationType.AnimationController:
                     return new AnimationControllerAnimationTypeData();
+                case AnimationType.ObjectCreation:
+                    return new ObjectCreationAnimationTypeData();
                 default:
                     return null;
             }
@@ -249,6 +323,8 @@ namespace kekchpek.Auxiliary.AnimationControllerTool.Editor
                     return JsonUtility.FromJson<SpineClearTrackAnimationTypeData>(json);
                 case AnimationType.AnimationController:
                     return JsonUtility.FromJson<AnimationControllerAnimationTypeData>(json);
+                case AnimationType.ObjectCreation:
+                    return JsonUtility.FromJson<ObjectCreationAnimationTypeData>(json);
                 default:
                     return CreateTypeData(animationType);
             }

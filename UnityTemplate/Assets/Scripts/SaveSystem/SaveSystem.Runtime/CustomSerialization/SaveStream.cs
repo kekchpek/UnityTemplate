@@ -40,10 +40,10 @@ namespace kekchpek.SaveSystem.CustomSerialization
 
         public void SaveStruct<T>(T val) where T : unmanaged => _adapter.WriteStruct(_stream, val);
 
-        public void SaveSabable<T>(T val) where T : ISaveObject, new() => val.Serialize(this);
+        public void SaveSabable<T>(T val, int? customCodecVersion) where T : ISaveObject, new() => val.Serialize(this, customCodecVersion);
         
 
-        public void SaveCustom<T>(T val) => _adapter.WriteCustom(_stream, val);
+        public void SaveCustom<T>(T val, int? customCodecVersion) => _adapter.WriteCustom(_stream, val, customCodecVersion);
         
         public static void Release(SaveStream s) => s.Dispose();
 

@@ -5,11 +5,12 @@ using GameResources.Domain;
 
 namespace kekchpek.MVVM.Models.GameResources.Container
 {
-    public interface IResourcesContainer
+    public interface IResourcesContainer<T>
     {
-        event Action<ResourceId, float> ResourceChanged;
+        event Action<ResourceId, T> ResourceChanged;
+        bool HasResource(ResourceId resourceId);
         IEnumerable<ResourceId> GetKnownResources();
         IEnumerable<ResourceId> GetNonZeroResources();
-        IBindable<float> GetResource(ResourceId resourceId);
+        IBindable<T> GetResource(ResourceId resourceId);
     }
 }
