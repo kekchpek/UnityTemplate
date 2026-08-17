@@ -13,13 +13,7 @@
         "GUID:832cffb722bce43e88985c100b5a61f9",
         "GUID:0f62c3857a26a4ebd8efac6d2cd1f027",
         "BulkEvents",
-        "BindableValues",
-        "kekchpek.TimeSystem",
-        "AuxiliaryComponents",
-        "AudioSystem",
-        "BasicSettings",
-        "DynamicTexts",
-        "SkillsSystem"
+        "kekchpek.TimeSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

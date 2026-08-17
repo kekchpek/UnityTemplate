@@ -59,7 +59,8 @@
         "com.cysharp.unitask",
         "com.kekchpek.ara",
         "com.kekchpek.umvvm",
-        "com.svermeulen.extenject"
+        "com.svermeulen.extenject",
+        "net.tnrd.nsubstitute"
       ]
     }
   ]
